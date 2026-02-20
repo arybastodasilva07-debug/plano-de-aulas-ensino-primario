@@ -22,8 +22,26 @@ client = OpenAI(api_key=api_key)
 curriculo = {
     "Iniciação": {
         "Língua Portuguesa": {
-            "Alfabetização": ["Letras e Sons", "Palavras Simples"],
-            "Leitura Inicial": ["Compreensão de pequenas histórias", "Identificação de personagens"]
+            "TEMA 1 - QUEM SOU EU?": [
+                "Eu sou",
+                "Eu Chamo-me",
+                "Identificar pessoas",
+                "Expressões de delicadeza",
+                "Grafismo",
+                "História: O Sapo e o Ovo"
+            ],
+            "TEMA 2 - A MINHA FAMÍLIA E EU" [
+                "A família da ana",
+                "O alfabeto",
+                "Estudo da letra I",
+                "Estudo da letra O",
+                "Estudo da letra U",
+                "Estudo da letra E",
+                "Estudo da letra A",
+                "Vogais nasais",
+                "Ditongos orais",
+                "Ditongos nasais",
+            ]
         },
         "Matemática": {
             "Números": ["Contagem até 10", "Comparação de quantidades", "Sequências numéricas"],
@@ -299,3 +317,4 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+

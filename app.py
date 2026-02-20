@@ -34,4 +34,5 @@ if st.button("Gerar Plano Final"):
 	st.success("Plano pronto!")
 	st.write(f"Diciplina: {disciplina} | Classe: {classe}")
 	st.write(f"Tema: {tema}")
-	st.write(f"Metodologia: {f_intro}, {f_med}, {f_dom}, {f_cont}"
+
+	st.write(f"Metodologia: {f_intro}, {f_med}, {f_dom}, {f_cont}...")

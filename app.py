@@ -30,7 +30,7 @@ curriculo = {
                 "Grafismo",
                 "História: O Sapo e o Ovo"
             ],
-            "TEMA 2 - A MINHA FAMÍLIA E EU" [
+            "TEMA 2 - A MINHA FAMÍLIA E EU": [
                 "A família da ana",
                 "O alfabeto",
                 "Estudo da letra I",
@@ -317,4 +317,5 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 

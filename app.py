@@ -291,9 +291,9 @@ curriculo = {
             "Movimento": ["Corrida, saltos, equilíbrio"],
             "Jogos": ["Cooperação e regras simples"]
         }
-    },
+    }
 
-    # ----------------- 3ª Classe -----------------
+# ----------------- 3ª Classe -----------------
     "3ª Classe": {
         "Língua Portuguesa": {
             "Leitura e Compreensão": ["Textos curtos e pequenos contos", "Personagens e enredo"],
@@ -499,5 +499,6 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 

@@ -267,7 +267,7 @@ curriculo = {
         ]
     }
 }
-
+}
     # ----------------- 2ª Classe -----------------
     "2ª Classe": {
         "Língua Portuguesa": {
@@ -499,4 +499,5 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 

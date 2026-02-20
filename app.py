@@ -1,112 +1,124 @@
-========================
-ARQUIVO: requirements.txt
-========================
-streamlit
-python-docx
-reportlab
+import streamlit as st
 
+# Configuração da Página
+st.set_page_config(page_title="Gerador INIDE Angola", layout="wide", page_icon="🇦🇴")
 
-========================
-ARQUIVO: disciplinas.py
-========================
-disciplinas = {
-    "Iniciação": [
-        "Iniciação à Leitura e Escrita",
-        "Matemática",
-        "Estudo do Meio",
-        "Expressão Plástica",
-        "Expressão Musical"
-    ],
-    "1ª Classe": ["Língua Portuguesa", "Matemática", "Estudo do Meio"],
-    "2ª Classe": ["Língua Portuguesa", "Matemática", "Estudo do Meio"],
-    "3ª Classe": ["Língua Portuguesa", "Matemática", "Ciências da Natureza", "História", "Geografia"],
-    "4ª Classe": ["Língua Portuguesa", "Matemática", "Ciências da Natureza", "História", "Geografia"],
-    "5ª Classe": ["Língua Portuguesa", "Matemática", "Ciências da Natureza", "História", "Geografia"],
-    "6ª Classe": ["Língua Portuguesa", "Matemática", "Ciências da Natureza", "História", "Geografia"]
+# --- BASE DE DADOS DE DISCIPLINAS POR CLASSE (PADRÃO INIDE) ---
+DISCIPLINAS_POR_CLASSE = {
+    "Iniciação": ["Língua Portuguesa", "Matemática", "Estudo do Meio", "Educação Artística", "Educação Física"],
+    "1ª Classe": ["Língua Portuguesa", "Matemática", "Estudo do Meio", "Educação Artística", "Educação Física"],
+    "2ª Classe": ["Língua Portuguesa", "Matemática", "Estudo do Meio", "Educação Artística", "Educação Física"],
+    "3ª Classe": ["Língua Portuguesa", "Matemática", "Estudo do Meio", "Educação Artística", "Educação Física", "Educação Moral e Cívica"],
+    "4ª Classe": ["Língua Portuguesa", "Matemática", "Estudo do Meio", "Educação Artística", "Educação Física", "Educação Moral e Cívica"],
+    "5ª Classe": ["Língua Portuguesa", "Matemática", "Ciências da Natureza", "História", "Geografia", "Educação Moral e Cívica", "Educação Visual e Plástica", "Educação Musical", "Educação Física"],
+    "6ª Classe": ["Língua Portuguesa", "Matemática", "Ciências da Natureza", "História", "Geografia", "Educação Moral e Cívica", "Educação Visual e Plástica", "Educação Musical", "Educação Física"]
 }
 
+# --- EXEMPLOS DE TEMAS/CONTEÚDOS AUTOMÁTICOS (EXEMPLO PARA TESTE) ---
+# Aqui pode-se expandir com todos os manuais
+BASE_CONTEUDO = {
+    "Geografia": {
+        "A Terra e o Universo": {
+            "obj_geral": "Compreender a organização do sistema solar.",
+            "obj_aula": "Identificar os planetas e a posição da Terra no sistema solar.",
+            "conteudo": "O Sol, os oito planetas, satélites e astros menores.",
+            "metodologia": "Método Expositivo e Elaboração Conjunta.",
+            "actividades": "Observação de gravuras e desenho do sistema solar no caderno.",
+            "material": "Manual do aluno, Globo terrestre, Cartazes.",
+            "fases": ["Revisão de conceitos de céu e estrelas", "Explicação sobre a centralidade do sol", "Exercício de identificação dos planetas", "Pergunta de controlo sobre o maior planeta"]
+        }
+    },
+    "História": {
+        "A Resistência em Angola": {
+            "obj_geral": "Valorizar a luta dos povos de Angola contra a ocupação.",
+            "obj_aula": "Descrever o papel da Rainha Njinga Mbandi na resistência.",
+            "conteudo": "A resistência dos reinos do Ndongo e Matamba.",
+            "metodologia": "Método Narrativo e Trabalho Independente.",
+            "actividades": "Leitura de texto biográfico e debate sobre tácticas de guerra.",
+            "material": "Manual, mapas históricos, ilustrações.",
+            "fases": ["Introdução sobre a chegada dos portugueses", "Narração da vida de Njinga Mbandi", "Debate sobre a coragem da rainha", "Resumo das ideias chaves"]
+        }
+    }
+}
 
-========================
-ARQUIVO: gerador_ia.py
-========================
-def gerar_plano(dados):
+# --- INTERFACE ---
+st.title("🇦🇴 Sistema Automático de Planos de Aula")
+st.markdown("### Alinhado ao Programa Curricular do INIDE")
 
-    plano = f"""
-🇦🇴 PLANO DE AULA – ENSINO PRIMÁRIO (INIDE)
+# Janela 1: Identificação
+with st.expander("📂 1. IDENTIFICAÇÃO E DADOS GERAIS", expanded=True):
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        classe = st.selectbox("Classe", list(DISCIPLINAS_POR_CLASSE.keys()))
+        tempo = st.selectbox("Tempo de Aula", ["45 min", "90 min"])
+    with c2:
+        disciplina = st.selectbox("Disciplina", DISCIPLINAS_POR_CLASSE[classe])
+        aula_no = st.number_input("Aula Nº", min_value=1, step=1)
+    with c3:
+        tema = st.text_input("Tema Geral", placeholder="Ex: A Terra e o Universo")
+        sumario = st.text_input("Sumário ou Subtema", placeholder="Ex: O Sistema Solar")
 
-Classe: {dados['classe']}
-Disciplina: {dados['disciplina']}
-Tema: {dados['tema']}
-Sumário: {dados['subtema']}
-Tempo: {dados['tempo']}
-Aula Nº: {dados['aula']}
+# Lógica de Sugestão Automática
+sugestao = BASE_CONTEUDO.get(disciplina, {}).get(tema, {})
 
-1. OBJECTIVOS GERAIS
-- Desenvolver competências previstas no programa do INIDE.
-- Promover valores de cidadania e responsabilidade.
+# Janela 2: Objectivos e Conteúdo
+with st.expander("🎯 2. OBJECTIVOS E CONTEÚDOS"):
+    c_obj1, c_obj2 = st.columns(2)
+    with c_obj1:
+        obj_geral = st.text_area("Objectivos Gerais", value=sugestao.get("obj_geral", ""))
+        obj_aula = st.text_area("Objectivos da Aula", value=sugestao.get("obj_aula", ""))
+    with c_obj2:
+        conteudo = st.text_area("Conteúdo Teórico", value=sugestao.get("conteudo", ""))
+        material = st.text_input("Material Didáctico", value=sugestao.get("material", "Quadro, giz, manual, apagador"))
 
-2. OBJECTIVOS DA AULA
-- Identificar conceitos principais sobre {dados['subtema']}.
-- Relacionar o conteúdo com situações da vida na comunidade.
+# Janela 3: Metodologia e Estratégia
+with st.expander("⚙️ 3. METODOLOGIA E ACTIVIDADES"):
+    c_met1, c_met2 = st.columns(2)
+    with c_met1:
+        metodologia = st.text_input("Metodologias de Ensino", value=sugestao.get("metodologia", "Método Expositivo"))
+        avaliacao = st.selectbox("Tipo de Avaliação", ["Formativa (Contínua)", "Diagnóstica", "Sumativa"])
+    with c_met2:
+        actividades = st.text_area("Actividades Chaves", value=sugestao.get("actividades", ""))
 
-3. CONTEÚDO
-- Conceito e explicação do tema.
-- Exemplos práticos da realidade angolana.
+# Janela 4: Fases da Aula (Desenvolvimento)
+with st.expander("⏳ 4. FASES DA AULA (DESENVOLVIMENTO)"):
+    f_fases = sugestao.get("fases", ["", "", "", ""])
+    f1, f2 = st.columns(2)
+    with f1:
+        intro = st.text_area("I/M (Introdução e Motivação)", value=f_fases[0])
+        media = st.text_area("M/A (Mediação e Assimilação)", value=f_fases[1])
+    with f2:
+        dominio = st.text_area("D/C (Domínio e Consolidação)", value=f_fases[2])
+        controle = st.text_area("C/A (Controle e Avaliação)", value=f_fases[3])
 
-4. MATERIAL DIDÁCTICO
-- Quadro e giz
-- Manual escolar
-- Objectos locais
-- Cartolinas
+# Botão de Sugestão de IA Realista (Contexto Angola)
+if st.button("🤖 Sugerir Atividades (Realidade Local)"):
+    st.info(f"Sugestão para {tema}: 'Use exemplos do mercado local e materiais do meio (pedras, sementes) para ilustrar os conceitos, adaptando à realidade da província.'")
 
-5. METODOLOGIA
-- Método participativo
-- Trabalho em grupo
-- Perguntas orientadoras
-
-6. ACTIVIDADES-CHAVE
-- Discussão inicial
-- Exercício prático
-- Apresentação em grupo
-
-7. AVALIAÇÃO
-- Observação directa
-- Participação
-- Exercícios escritos
-
-8. TAREFA PARA CASA
-- Realizar exercícios do manual.
-- Pesquisar exemplos na comunidade.
-"""
-
-    return plano
-
-
-========================
-ARQUIVO: exportador.py
-========================
-from docx import Document
-from reportlab.platypus import SimpleDocTemplate, Paragraph
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet
-import io
-
-
-def exportar_word(texto):
-    doc = Document()
-    doc.add_paragraph(texto)
-    file_stream = io.BytesIO()
-    doc.save(file_stream)
-    file_stream.seek(0)
-    return file_stream
-
-
-def exportar_pdf(texto):
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4)
-    styles = getSampleStyleSheet()
-    elements = []
-    elements.append(Paragraph(texto.replace("\n", "<br/>"), styles["Normal"]))
+# Botão Final
+if st.button("📝 GERAR PLANO COMPLETO"):
+    st.success("Plano de aula gerado com sucesso!")
+    resultado = f"""
+    --- PLANO DE AULA FORMATADO ---
+    CLASSE: {classe} | DISCIPLINA: {disciplina} | TEMPO: {tempo} | AULA Nº: {aula_no}
+    TEMA: {tema} | SUMÁRIO: {sumario}
+    
+    OBJECTIVOS GERAIS: {obj_geral}
+    OBJECTIVOS DA AULA: {obj_aula}
+    CONTEÚDO: {conteudo}
+    MATERIAL: {material}
+    METODOLOGIA: {metodologia}
+    ACTIVIDADES CHAVE: {actividades}
+    AVALIAÇÃO: {avaliacao}
+    
+    DESENVOLVIMENTO:
+    1. I/M: {intro}
+    2. M/A: {media}
+    3. D/C: {dominio}
+    4. C/A: {controle}
+    -------------------------------
+    """
+    st.code(resultado, language="text")
     doc.build(elements)
     buffer.seek(0)
     return buffer
@@ -169,3 +181,4 @@ with col2:
                 exportar_pdf(plano),
                 file_name="plano_de_aula.pdf"
 )
+

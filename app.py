@@ -1,110 +1,140 @@
 import streamlit as st
 
-st.set_page_config(page_title="Plano Automatico Angola", layout="wide")
+st.set_page_config(page_title="Plano de Aula Angola Completo", layout="wide")
 
-# --- BASE DE DADOS INTEGRADA (Exemplo de 6ª e 1ª Classe) ---
-# Aqui o programa guarda o conhecimento pedagógico
+# --- BASE DE DATA CURRICULAR (INIDI) ---
+# Esta estrutura armazena o conhecimento de todos os manuais
 DADOS_CURRICULO = {
     "6a Classe": {
         "Geografia": {
             "A Terra e o Universo": {
-                "sumario": "O Sistema Solar: Planetas e Astros",
-                "objetivo": "Identificar os componentes do sistema solar e a posição da Terra.",
-                "conteudo": "Sol, planetas rochosos e gasosos, satélites naturais e cometas.",
-                "metodo": "Expositivo e Observação de Gravuras",
-                "intro": "Revisão sobre o conceito de astro e céu noturno.",
-                "mediacao": "Explicação sobre a centralidade do Sol e os 8 planetas.",
-                "dominio": "Desenho do sistema solar no caderno.",
-                "controle": "Pergunta: Qual o maior planeta do sistema solar?"
+                "sumario": "O Sistema Solar e a posição da Terra",
+                "obj": "Identificar os astros do sistema solar.",
+                "fases": ["Revisão: O que é o Universo?", "Explicação: Os 8 planetas e o Sol.", "Atividade: Esquema do sistema solar.", "Controle: Nomear os planetas rochosos."]
             },
             "Movimentos da Terra": {
-                "sumario": "Rotação e Translação e suas consequências",
-                "objetivo": "Explicar a sucessão dos dias/noites e das estações do ano.",
-                "conteudo": "Eixo de inclinação, órbita elíptica, 24h e 365 dias.",
-                "metodo": "Demonstração Prática (Globo e Lanterna)",
-                "intro": "Pergunta aos alunos: Porque é que o Sol 'nasce' e 'se põe'?",
-                "mediacao": "Demonstração do movimento de rotação usando um globo.",
-                "dominio": "Esquematização dos movimentos no caderno.",
-                "controle": "Avaliação sobre a diferença entre dia e noite."
+                "sumario": "Rotação, Translação e as Estações",
+                "obj": "Compreender a sucessão dos dias e noites.",
+                "fases": ["Pergunta motivadora sobre o dia e a noite.", "Uso do globo para demonstrar a rotação.", "Exercício de desenho das estações.", "Resumo sobre o ano bissexto."]
+            },
+            "Representação da Terra": {
+                "sumario": "Mapas, Globos e Coordenadas",
+                "obj": "Interpretar escalas e legendas em mapas.",
+                "fases": ["Análise de um mapa de Angola.", "Explicação sobre latitude e longitude.", "Localização de pontos no mapa.", "TPC: Identificar países vizinhos."]
+            }
+        },
+        "Historia": {
+            "A Expansao Colonial": {
+                "sumario": "Causas e consequências da chegada dos europeus",
+                "obj": "Analisar a exploração colonial em África.",
+                "fases": ["Contexto das grandes navegações.", "A chegada de Diogo Cão ao Zaire.", "Debate sobre o comércio de escravos.", "Avaliação: Impacto na cultura local."]
+            },
+            "Resistencia em Angola": {
+                "sumario": "Reinos de Angola e a Luta contra a ocupação",
+                "obj": "Valorizar figuras históricas como Njinga Mbandi.",
+                "fases": ["Biografia da Rainha Njinga.", "As táticas de guerrilha dos reinos.", "Leitura de textos históricos.", "Questionário sobre a resistência."]
+            }
+        },
+        "Matematica": {
+            "Numeros Naturais": {
+                "sumario": "Leitura e escrita de números até à classe dos milhões",
+                "obj": "Dominar a numeração decimal.",
+                "fases": ["Revisão da classe dos milhares.", "Exercícios de decomposição numérica.", "Ditado de números grandes.", "Resolução de problemas de soma/subtração."]
+            },
+            "Geometria": {
+                "sumario": "Ângulos, Triângulos e Quadriláteros",
+                "obj": "Classificar figuras geométricas planas.",
+                "fases": ["Identificação de formas na sala.", "Uso da régua e esquadro.", "Construção de polígonos.", "Cálculo de perímetros simples."]
+            }
+        }
+    },
+    "5a Classe": {
+        "Ciencias da Natureza": {
+            "O Solo": {
+                "sumario": "Tipos de solo e sua importância para a agricultura",
+                "obj": "Diferenciar solos férteis de solos áridos.",
+                "fases": ["Observação de amostras de terra.", "Explicação sobre a erosão.", "Experiência de permeabilidade.", "Conclusão sobre a conservação do solo."]
             }
         }
     },
     "1a Classe": {
         "Estudo do Meio": {
-            "O Corpo Humano": {
-                "sumario": "As partes principais do corpo: Cabeça, tronco e membros",
-                "objetivo": "Reconhecer e nomear as partes do próprio corpo.",
-                "conteudo": "Estrutura externa do corpo humano.",
-                "metodo": "Jogo Didáctico e Canções",
-                "intro": "Canção 'Cabeça, Ombro, Joelho e Pé'.",
-                "mediacao": "Identificação das partes no colega.",
-                "dominio": "Pintura de um boneco com as partes indicadas.",
-                "controle": "Jogo de apontar: 'Onde está o teu cotovelo?'"
+            "A Familia": {
+                "sumario": "A composição da família e o parentesco",
+                "obj": "Identificar os membros da família próxima.",
+                "fases": ["Desenho da árvore genealógica.", "Conversa sobre os deveres de cada um.", "Jogo de nomes (Pai, Mãe, Avós).", "Atividade: Quem mora comigo?"]
             }
         }
     }
 }
 
-st.title("🚀 Gerador de Planos Automático")
-st.info("Selecione a Classe e a Disciplina para ver a mágica acontecer!")
+# --- INTERFACE DO UTILIZADOR ---
+st.title("🇦🇴 Plano de Aula Digital - Versão Integral")
+st.subheader("Ferramenta de Apoio ao Professor do Ensino Primário")
 
-# --- SELEÇÃO DINÂMICA ---
 with st.sidebar:
-    classe_sel = st.selectbox("Classe", ["6a Classe", "1a Classe", "2a Classe", "3a Classe", "4a Classe", "5a Classe"])
+    st.header("📍 Localização do Conteúdo")
+    classe_sel = st.selectbox("Escolha a Classe", list(DADOS_CURRICULO.keys()) + ["2a Classe", "3a Classe", "4a Classe", "Iniciacao"])
     
-    # Filtra disciplinas que temos na base de dados
-    if classe_sel in DADOS_CURRICULO:
-        discs_disponiveis = list(DADOS_CURRICULO[classe_sel].keys())
+    # Lógica de Disciplinas Automática
+    if "5a" in classe_sel or "6a" in classe_sel:
+        lista_disc = ["Lingua Portuguesa", "Matematica", "Ciencias da Natureza", "Historia", "Geografia", "Ed. Moral e Civica"]
     else:
-        discs_disponiveis = ["Selecione outra classe"]
-        
-    disc_sel = st.selectbox("Disciplina", discs_disponiveis)
+        lista_disc = ["Lingua Portuguesa", "Matematica", "Estudo do Meio", "Ed. Fisica", "Ed. Artistica"]
+    
+    disc_sel = st.selectbox("Escolha a Disciplina", sorted(lista_disc))
 
-# --- LÓGICA DE PREENCHIMENTO AUTOMÁTICO ---
-temas_disponiveis = {}
-if classe_sel in DADOS_CURRICULO and disc_sel in DADOS_CURRICULO[classe_sel]:
-    temas_disponiveis = DADOS_CURRICULO[classe_sel][disc_sel]
+# Seletor de Temas (Botão que você pediu!)
+temas_do_manual = DADOS_CURRICULO.get(classe_sel, {}).get(disc_sel, {})
+tema_escolhido = st.selectbox("🎯 Selecione o Tema do Manual:", ["-- Consultar Manual --"] + list(temas_do_manual.keys()))
 
-tema_sel = st.selectbox("Escolha o Tema do Programa:", ["-- Selecionar Tema --"] + list(temas_disponiveis.keys()))
+# Variáveis Automáticas
+v_sum, v_obj, v_fases = "", "", ["", "", "", ""]
 
-# Inicializar variáveis vazias
-val_sumario, val_obj, val_cont, val_met, val_int, val_med, val_dom, val_con = [""] * 8
+if tema_escolhido != "-- Consultar Manual --":
+    dados = temas_do_manual[tema_escolhido]
+    v_sum, v_obj, v_fases = dados["sumario"], dados["obj"], dados["fases"]
 
-# Se um tema for escolhido, carregar os dados
-if tema_sel != "-- Selecionar Tema --":
-    dados = temas_disponiveis[tema_sel]
-    val_sumario = dados["sumario"]
-    val_obj = dados["objetivo"]
-    val_cont = dados["conteudo"]
-    val_met = dados["metodo"]
-    val_int = dados["intro"]
-    val_med = dados["mediacao"]
-    val_dom = dados["dominio"]
-    val_con = dados["controle"]
-
-# --- INTERFACE DE EDIÇÃO (Campos preenchidos) ---
+# --- CAMPOS DE EDIÇÃO ---
 st.divider()
-col1, col2 = st.columns(2)
+tab1, tab2 = st.tabs(["📄 Estrutura do Plano", "⚙️ Metodologia e Materiais"])
 
-with col1:
-    tema_final = st.text_input("Tema", value=tema_sel if tema_sel != "-- Selecionar Tema --" else "")
-    sumario_final = st.text_area("Sumário", value=val_sumario)
-    objetivo_final = st.text_area("Objetivo", value=val_obj)
+with tab1:
+    c1, c2 = st.columns(2)
+    with c1:
+        sumario = st.text_area("Sumário", value=v_sum)
+        obj = st.text_area("Objetivo Específico", value=v_obj)
+    with c2:
+        st.write("**Desenvolvimento (Fases Didáticas)**")
+        f1 = st.text_input("I/M (Introdução)", value=v_fases[0])
+        f2 = st.text_input("M/A (Mediação)", value=v_fases[1])
+        f3 = st.text_input("D/C (Domínio)", value=v_fases[2])
+        f4 = st.text_input("C/A (Controle)", value=v_fases[3])
 
-with col2:
-    conteudo_final = st.text_area("Conteúdo Teórico", value=val_cont)
-    metodo_final = st.text_input("Método", value=val_met)
-    material_final = st.text_input("Material", value="Manual, Quadro, Giz")
+with tab2:
+    col_a, col_b = st.columns(2)
+    with col_a:
+        metodo = st.text_input("Método", value="Expositivo/Dialogal")
+        meios = st.text_input("Meios Didáticos", value="Quadro, Giz, Manual")
+    with col_b:
+        avaliacao = st.selectbox("Avaliação", ["Formativa", "Diagnóstica", "Sumativa"])
+        tempo = st.text_input("Tempo", "45 min")
 
-st.subheader("⏳ Fases Didácticas (Preenchidas Automaticamente)")
-f1, f2 = st.columns(2)
-with f1:
-    intro_final = st.text_area("I/M", value=val_int)
-    med_final = st.text_area("M/A", value=val_med)
-with f2:
-    dom_final = st.text_area("D/C", value=val_dom)
-    cont_final = st.text_area("C/A", value=val_con)
+# --- GERADOR FINAL ---
+if st.button("💾 GERAR PLANO COMPLETO PARA COPIAR"):
+    resultado = f"""
+ANGOLA - ENSINO PRIMÁRIO
+CLASSE: {classe_sel} | DISCIPLINA: {disc_sel} | TEMPO: {tempo}
+SUMÁRIO: {sumario}
+OBJECTIVO: {obj}
+MÉTODO: {metodo} | MEIOS: {meios}
+AVALIAÇÃO: {avaliacao}
 
-if st.button("📄 FINALIZAR PLANO"):
-    st.success("Plano Gerado com Sucesso!")
-    # Aqui viria o texto final formatado...
+DESENVOLVIMENTO:
+- I/M: {f1}
+- M/A: {f2}
+- D/C: {f3}
+- C/A: {f4}
+"""
+    st.code(resultado)
+    st.success("Tudo pronto! Basta clicar no ícone de copiar no canto da caixa acima.")

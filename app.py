@@ -266,7 +266,7 @@ curriculo = {
             "Jogos sensoriais"
         ]
     }
-}
+    }
 
     # ----------------- 2ª Classe -----------------
     "2ª Classe": {
@@ -498,6 +498,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

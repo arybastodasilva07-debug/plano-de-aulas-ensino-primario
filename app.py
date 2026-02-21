@@ -205,13 +205,13 @@ curriculo = {
         "Educação Manual e Plástica": {
             "TEMA 1 – O DESENHO": [
                 "Risco (desenhos com riscos)",
-                "Traço e tracejo (desenhos com traços",
+                "Traço e tracejo (desenhos com traços)",
                 "Pontos (desenhos com pontos)",
                 "Rasgagem e colagem (Rasgar e colar um triângulo e um quadrado,um círculo e uma cobra, uma estrela e uma casa, uma laranja e uma banana e várias figuras simples)"
             ],
             "TEMA 2 – A PINTURA": [
                 "Impressão e estampagem (Estampar com frutos e folhas, Carimbar com plasticina, Imprimir no papel, Estampar com recortes)",
-                "Digitintas (digitintas com as mãos, com os dedos e desenhar com os dedos"),
+                "Digitintas (digitintas com as mãos, com os dedos e desenhar com os dedos)",
                 "Recorte e colagem (Recortar as figuras geométricas simples utilizando a tesoura, Recortar uma maçã e um menino)"
             ],
             "TEMA 3 – A MODELAGEM": [
@@ -696,6 +696,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

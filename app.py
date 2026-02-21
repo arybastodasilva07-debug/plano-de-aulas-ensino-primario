@@ -384,6 +384,7 @@ curriculo = {
     
         "Matemática": {
             "Geometria": [
+                "Sólidos geométricos",
                 "Paralelepípedo e cubo",
                 "Esfera",
                 "Cilindro e cone",
@@ -407,6 +408,17 @@ curriculo = {
                 "Medidas não padronizadas",
                 "Metro",
                 "Grama"
+                "Capacidade (litro)"
+                "Medidas de tempo",
+                "Os dias da semana",
+                "Os meses do ano",
+                "Leitura da hora e do minuto no relógio",
+                "Resolução de problemas",
+                "A moeda",
+                "Moeda angolana",
+                "Valores faciais da moeda angolana até Kz 1000,00",
+                "Relação entre valores faciais da moeda",
+                "Resolução de problemas que envolvam dinheiro até Kz 1 000,00,"
             ]
         },
     
@@ -677,6 +689,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

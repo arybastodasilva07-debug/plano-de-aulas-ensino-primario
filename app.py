@@ -129,18 +129,18 @@ curriculo = {
                 "A minha escola",
                 "Localização da escola",
                 "Compartimentos da escola",
-                "Sala de aula",
-                "Cuidados com a escola",
-                "Material escolar",
+                "A sala de aulas",
+                "Cuidados a ter com a escola",
+                "Cuidados a te com material escolar",
                 "Comunidade escolar"
             ],
             "TEMA 5 - ALIMENTAÇÃO": [
                 "Necessidade de alimentação",
                 "Alimentação rica e variada",
                 "O que devemos comer",
-                "Alimentos na nossa dieta",
+                "Alimentos presentes na nossa dieta",
                 "Fonte dos alimentos",
-                "Cuidados com os alimentos"
+                "Cuidados a ter com os alimentos"
             ],
             "TEMA 6 - O VESTUÁRIO": [
                 "Tipos de vestuário",
@@ -156,7 +156,7 @@ curriculo = {
             "TEMA 8 – AS PLANTAS": [
                 "Estrutura das plantas",
                 "Importância das plantas",
-                "Cuidados com as plantas"
+                "Cuidados a ter com as plantas"
             ],
             "TEMA 9 – OS ANIMAIS": [
                 "Animais domésticos e selvagens",
@@ -167,44 +167,52 @@ curriculo = {
     
         "Matemática": {
             "TEMA 1 – GEOMETRIA": [
-                "Relações espaciais",
+                "Relações espaciais(À frente/atrás/entre; Em cima/em baixo; dentro/fora; Interios/Exterior; Alto/baixo; Direita/esquerda/à direita/à esquerda)",
                 "Sólidos geométricos",
                 "Figuras geométricas planas",
                 "Linhas rectas, curvas e quebradas",
                 "Linhas abertas e fechadas"
             ],
             "TEMA 2 – NÚMEROS, CONJUNTOS E OPERAÇÕES": [
-                "Números naturais até 10",
-                "Números naturais até 20",
-                "Conjuntos",
-                "Números naturais até 50",
-                "Números naturais até 100",
-                "Adição",
-                "Subtracção",
-                "Multiplicação por 2, 3 e 4",
-                "Divisão por 2, 3 e 4"
+                "Estudo dos números naturais até 10 (leitura e escrita)",
+                "Adição de números naturais até 9",
+                "Subtracção de números naturais até 9",
+                "Comparação de números naturais até 10",
+                "Leitura, escrita e adição dos números até 20: dezena e unidade",
+                "Comparação e ordenação dos números naturais até 20"
+                "Adição e subtracção dos números na forma do algoritmo vertical"
+                "Conjuntos: Tantos como (quanto) | mais do que | menos do que",
+                "Leitura e escrita dos números de 21 até 50",
+                "Adição e subtracção de números naturais até 50",
+                "Contar e escrever de 2 em 2, de 5 em 5 e de 10 em 10",
+                "Leitura e escrita dos números de 51 até 100",
+                "Adição e subtracção de números até 100",
+                "Comparação e ordenação dos números até 100",
+                "Composição e decomposição dos números em parcelas",
+                "Multiplicação e divisão dos números naturais por 2, 3 e 4"
             ],
-            "TEMA 3 – GRANDEZAS E MEDIDAS": [
-                "Comprimento",
+            "TEMA 3 – GRANDEZAS E MEDIDAS: Conservação, comparação e ordenação de grandezas": [
+                "Comprimento (Comparação de grandezas – comprimento)",
                 "Massa",
                 "Capacidade",
-                "Relações temporais",
+                "Relações temporais: Hoje, ontem, amanhã, agora, antes, depois/ Muito tempo, pouco tempo, ao mesmo tempo",
                 "Dias da semana",
                 "Dinheiro e moeda angolana"
+                "Valores faciais da moeda angolana até Kz 100.00",
             ]
         },
     
         "Educação Manual e Plástica": {
             "TEMA 1 – O DESENHO": [
-                "Risco",
-                "Traço e tracejo",
-                "Pontos",
-                "Rasgagem e colagem"
+                "Risco (desenhos com riscos)",
+                "Traço e tracejo (desenhos com traços",
+                "Pontos (desenhos com pontos)",
+                "Rasgagem e colagem (Rasgar e colar um triângulo e um quadrado,um círculo e uma cobra, uma estrela e uma casa, uma laranja e uma banana e várias figuras simples)"
             ],
             "TEMA 2 – A PINTURA": [
-                "Impressão e estampagem",
-                "Digitintas",
-                "Recorte e colagem"
+                "Impressão e estampagem (Estampar com frutos e folhas, Carimbar com plasticina, Imprimir no papel, Estampar com recortes)",
+                "Digitintas (digitintas com as mãos, com os dedos e desenhar com os dedos"),
+                "Recorte e colagem (Recortar as figuras geométricas simples utilizando a tesoura, Recortar uma maçã e um menino)"
             ],
             "TEMA 3 – A MODELAGEM": [
                 "Preparar e amassar barro",
@@ -212,10 +220,10 @@ curriculo = {
                 "Modelagem com barro e plasticina"
             ],
             "TEMA 4 – AS CONSTRUÇÕES": [
-                "Dobragem",
-                "Recorte e embrulho",
-                "Composição e colagem",
-                "Construção com materiais diversos"
+                "Dobragem (Dobrar uma folha de papel em quatro partes iguais, Fazer um avião, fazer um chapéu e fazer um barco)",
+                "Recorte e embrulho (Forrar um livro ou um caderno, embrulhar uma caixa)",
+                "Composição e colagem (Fazer um quadro com folhas, Fazer uma flor, Compor uma árvore, Compor um animal (borboleta), Compor um animal (porco))",
+                "Construção com materiais diversos (Construir uma casa com amorfo e plasticina, Construir um boneco)"
             ]
         },
     
@@ -223,23 +231,26 @@ curriculo = {
             "TEMA 1 – A VOZ": [
                 "Pequenas canções",
                 "Sons naturais e artificiais",
-                "Canções populares"
+                "Canções populares locais e escolares"
             ],
             "TEMA 2 – O CORPO": [
-                "Percussão corporal",
-                "Reprodução de batimentos"
+                "Percussão corporal com canções e gestos",
+                "Reprodução de batimentos simples e complexos"
             ],
             "TEMA 3 – INICIAÇÃO À TEORIA DA MÚSICA": [
                 "Pauta musical",
-                "Notas Ré e Mi"
+                "Primeiro espaço suplementar inferior e primeira linha da pauta musical: notas Ré e Mi"
             ],
             "TEMA 4 – OS INSTRUMENTOS MUSICAIS": [
                 "Instrumentos de percussão",
-                "Audição de sons",
-                "Jogos musicais"
+                "Audição dos sons produzidos por instrumentos de percussão",
+                "Jogos musicais com instrumentos de percussão"
             ],
             "TEMA 5 – INICIAÇÃO À TEORIA DA MÚSICA II": [
-                "Notas Fá e Sol"
+                "Primeiro espaço e segunda linha da pauta musical: notas Fá e Sol"
+            ],    
+            "TEMA 6 – OS INSTRUMENTOS MUSICAIS": [
+                "Audição dos sons produzidos por instrumentos de percussão"
             ]
         },
     
@@ -326,7 +337,7 @@ curriculo = {
         "Estudo do Meio": {
             "A Descoberta de Ti Mesmo": [
                 "O meu passado",
-                "Gostos e preferências",
+                "Meus gostos e preferências",
                 "O meu corpo",
                 "Cuido do meu corpo",
                 "Segurança na via pública",
@@ -334,22 +345,22 @@ curriculo = {
             ],
             "A Família": [
                 "A minha família",
-                "Outros membros",
-                "Parentesco",
+                "Outros membros da família",
+                "Relação de arentesco",
                 "Necessidades da família"
             ],
             "A Habitação": [
                 "Tipos de habitação",
-                "Higiene da habitação"
+                "Regras de higiene da habitação"
             ],
             "A Escola": [
-                "Partes da escola",
-                "Material escolar",
-                "Higiene escolar"
+                "Partes constituente da escola",
+                "Cuidados a ter com o material escolar",
+                "Higiene e saúde escolar"
             ],
             "A Alimentação": [
                 "Fontes de alimentação",
-                "Cuidados com alimentação",
+                "Cuidados a ter com alimentação",
                 "Higiene alimentar",
                 "Conservação dos alimentos"
             ],
@@ -360,17 +371,17 @@ curriculo = {
             ],
             "As Plantas": [
                 "Plantas da localidade",
-                "Árvores, arbustos e ervas",
+                "Plantas quanto ao tamanho: Árvores, arbustos e ervas",
                 "Plantas espontâneas e semeadas",
-                "Partes da planta",
+                "Partes constituintes da planta",
                 "Reprodução das plantas",
                 "Importância das plantas",
-                "Cuido do ambiente"
+                "Eu cuido do ambiente"
             ],
             "Os Animais": [
                 "Animais da localidade",
-                "Características externas",
-                "Modo de vida",
+                "Características externas de alguns animais",
+                "Modo de vida de alguns animais",
                 "Importância dos animais"
             ],
             "O Trabalho": [
@@ -384,39 +395,35 @@ curriculo = {
     
         "Matemática": {
             "Geometria": [
-                "Sólidos geométricos",
-                "Paralelepípedo e cubo",
-                "Esfera",
-                "Cilindro e cone",
+                "Sólidos geométricos (Paralelepípedo, cubo, esfera, cilindro e cone",
                 "Superfícies planas e curvas",
-                "Rectângulo, quadrado, triângulo e círculo",
-                "Traçado de figuras geométricas",
+                "Figuras geométricas planas e os seus traçados:  Rectângulo, quadrado, triângulo e círculo",
                 "Linhas directas, curvas e quebradas",
                 "Itinerário e percurso"
             ],
             "Números e Operações": [
-                "Números de 100 a 500",
-                "Adição e subtracção até 500",
-                "Composição e decomposição",
-                "Comparação e ordenação",
-                "Resolução de problemas",
-                "Números de 500 a 1000",
-                "Multiplicação por 2,3,4,5,10",
-                "Divisão por 2,3,4,5,10"
+                "Estudo dos números naturais de 100 até 500 (leitura e escrita)",
+                "Adição e subtracção de números naturais de 1 até 500",
+                "Composição e decomposição de números naturais em parcelas",
+                "Comparação e ordenação de números de 100 até 500",
+                "Resolução de problemas envolvendo números naturais de 100 até 500",
+                "Estudo dos números naturais de 500 até 1 000 (Leitura e escrita)",
+                "Adição e subtracção de números naturais até 1000",
+                "Composição e decomposição de números em parcelas",
+                "Multiplicação por 2, 3, 4, 5 e por 10",
+                "Divisão de números naturais por 2, 3, 4, 5 e 10"
+                "Comparação e ordenação de números até 1 000",
+                "Resolução de problemas envolvendo úmeros naturais de 500 até 1 000",
             ],
             "Grandezas e Medidas": [
-                "Medidas não padronizadas",
-                "Metro",
-                "Grama"
-                "Capacidade (litro)"
-                "Medidas de tempo",
-                "Os dias da semana",
-                "Os meses do ano",
-                "Leitura da hora e do minuto no relógio",
-                "Resolução de problemas",
-                "A moeda",
-                "Moeda angolana",
-                "Valores faciais da moeda angolana até Kz 1000,00",
+                "Medidas não padronizadas: Comprimento (palmos, pé, passos e braços)",
+                "Medidas não padronizadas: Capacidade (tanque, balde, lata e caneca)",
+                "Medidas padronizadas (Metro, Grama e Capacidade(litro))",
+                "Medidas de tempo (Os dias da semana, Os meses do ano)",
+                "Medidas de tempo (Leitura da hora e do minuto no relógio)",
+                "Resolução de problemas de medidas de tempo",
+                "A moeda(Moeda angolana)",
+                "A moeda (Valores faciais da moeda angolana até Kz 1000,00)",
                 "Relação entre valores faciais da moeda",
                 "Resolução de problemas que envolvam dinheiro até Kz 1 000,00,"
             ]
@@ -689,6 +696,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

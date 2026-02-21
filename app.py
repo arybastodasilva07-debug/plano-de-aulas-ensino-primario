@@ -497,5 +497,211 @@ if gerar:
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
 
+"2ª Classe": {
 
+    "Língua Portuguesa": {
+        "A Minha Escola": [
+            "O encontro",
+            "Pelo caminho",
+            "A queda da Vera",
+            "A Ana e o Paulo",
+            "A escola limpa",
+            "A casa do Guedes",
+            "Um passeio",
+            "As férias",
+            "A sala de aulas",
+            "Qual é a coisa qual é ela"
+        ],
+        "A Minha Família": [
+            "A minha família",
+            "O girassol",
+            "A lavra",
+            "O município de Cacuaco (I)",
+            "O município de Cacuaco (II)",
+            "O município de Cacuaco (III)",
+            "Tenho fome",
+            "O trabalho é importante",
+            "Vamos cantar",
+            "A avó da Ana",
+            "Vamos recitar"
+        ],
+        "O Mundo dos Animais": [
+            "Animais domésticos",
+            "Animais selvagens",
+            "Domésticos e selvagens",
+            "A utilidade dos animais",
+            "Tu falas",
+            "O sonho da Glória",
+            "As férias na aldeia (I)",
+            "As férias na aldeia (II)",
+            "As formigas",
+            "Uma visita",
+            "A trovoada"
+        ],
+        "A Minha Saúde": [
+            "Os alimentos (I)",
+            "Os alimentos (II)",
+            "O Víctor está forte",
+            "No campo",
+            "Uma carta",
+            "A chuva",
+            "O mercado",
+            "A saúde",
+            "Higiene do corpo (I)",
+            "Asseio",
+            "Higiene do corpo (II)",
+            "As vacinas",
+            "Canções e provérbios"
+        ]
+    },
+
+    "Estudo do Meio": {
+        "A Descoberta de Ti Mesmo": [
+            "O meu passado",
+            "Gostos e preferências",
+            "O meu corpo",
+            "Cuido do meu corpo",
+            "Segurança na via pública",
+            "Doenças do meu meio"
+        ],
+        "A Família": [
+            "A minha família",
+            "Outros membros",
+            "Parentesco",
+            "Necessidades da família"
+        ],
+        "A Habitação": [
+            "Tipos de habitação",
+            "Higiene da habitação"
+        ],
+        "A Escola": [
+            "Partes da escola",
+            "Material escolar",
+            "Higiene escolar"
+        ],
+        "A Alimentação": [
+            "Fontes de alimentação",
+            "Cuidados com alimentação",
+            "Higiene alimentar",
+            "Conservação dos alimentos"
+        ],
+        "Necessidade do Vestuário": [
+            "Importância do vestuário",
+            "Tipos de vestuário",
+            "Higiene do vestuário"
+        ],
+        "As Plantas": [
+            "Plantas da localidade",
+            "Árvores, arbustos e ervas",
+            "Plantas espontâneas e semeadas",
+            "Partes da planta",
+            "Reprodução das plantas",
+            "Importância das plantas",
+            "Cuido do ambiente"
+        ],
+        "Os Animais": [
+            "Animais da localidade",
+            "Características externas",
+            "Modo de vida",
+            "Importância dos animais"
+        ],
+        "O Trabalho": [
+            "O trabalho"
+        ],
+        "Transportes e Comunicações": [
+            "Meios de transporte",
+            "Meios de comunicação"
+        ]
+    },
+
+    "Matemática": {
+        "Geometria": [
+            "Paralelepípedo e cubo",
+            "Esfera",
+            "Cilindro e cone",
+            "Superfícies planas e curvas",
+            "Rectângulo, quadrado, triângulo e círculo",
+            "Traçado de figuras geométricas",
+            "Linhas directas, curvas e quebradas",
+            "Itinerário e percurso"
+        ],
+        "Números e Operações": [
+            "Números de 100 a 500",
+            "Adição e subtracção até 500",
+            "Composição e decomposição",
+            "Comparação e ordenação",
+            "Resolução de problemas",
+            "Números de 500 a 1000",
+            "Multiplicação por 2,3,4,5,10",
+            "Divisão por 2,3,4,5,10"
+        ],
+        "Grandezas e Medidas": [
+            "Medidas não padronizadas",
+            "Metro",
+            "Grama"
+        ]
+    },
+
+    "Educação Manual e Plástica": {
+        "Aprende a Desenhar": [
+            "Desenho com o ponto",
+            "Desenho com a linha"
+        ],
+        "Conhece as Cores": [
+            "Desenho com as cores",
+            "Aprende a pintar"
+        ],
+        "Cria Fora do Papel": [
+            "Modelagem",
+            "Reciclagem",
+            "Técnicas mistas"
+        ]
+    },
+
+    "Educação Musical": {
+        "A Voz": [
+            "Pequenas canções",
+            "Sons naturais e artificiais",
+            "Canções populares"
+        ],
+        "O Corpo": [
+            "Percussão corporal",
+            "Batimentos simples e complexos"
+        ],
+        "Teoria da Música": [
+            "Pauta musical",
+            "Notas Ré e Mi",
+            "Notas Fá e Sol"
+        ],
+        "Instrumentos Musicais": [
+            "Instrumentos de percussão",
+            "Audição de sons",
+            "Jogos musicais"
+        ]
+    },
+
+    "Educação Física": {
+        "Ginástica Básica": [
+            "Deslocamento",
+            "Salto",
+            "Lançamento",
+            "Trepar",
+            "Equilíbrio"
+        ],
+        "Ginástica Rítmica": [
+            "Ritmo"
+        ],
+        "Atletismo": [
+            "Corrida de velocidade",
+            "Corrida de resistência"
+        ],
+        "Jogos": [
+            "Jogos com bola",
+            "Jogos de correr",
+            "Jogos de saltar",
+            "Jogos sensoriais"
+        ]
+    }
+
+},
 

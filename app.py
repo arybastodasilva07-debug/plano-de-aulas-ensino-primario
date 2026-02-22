@@ -1,10 +1,11 @@
 import streamlit as st
+import base64
 from openai import OpenAI
 from docx import Document
 from docx.shared import Inches
 import io
 import os
-import base64
+
 
 # ---------------- CONFIGURAÇÃO ----------------
 st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
@@ -818,6 +819,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

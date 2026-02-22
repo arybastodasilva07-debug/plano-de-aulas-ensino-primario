@@ -1,20 +1,26 @@
 import streamlit as st
-import os
 import sqlite3
+import hashlib
+import os
 
 st.set_page_config(page_title="Plataforma Pedagógica Angola", layout="wide")
 
-PASTA_DOCS = "documentos_oficiais"
-
-if not os.path.exists(PASTA_DOCS):
-    os.makedirs(PASTA_DOCS)
-
 # =========================
-# BASE DE DADOS SQLITE
+# BASE DE DADOS
 # =========================
 
 conn = sqlite3.connect("plataforma.db", check_same_thread=False)
 c = conn.cursor()
+
+c.execute("""
+CREATE TABLE IF NOT EXISTS usuarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT,
+    email TEXT UNIQUE,
+    senha TEXT,
+    tipo TEXT
+)
+""")
 
 c.execute("""
 CREATE TABLE IF NOT EXISTS documentos (
@@ -27,144 +33,102 @@ CREATE TABLE IF NOT EXISTS documentos (
 )
 """)
 
-c.execute("""
-CREATE TABLE IF NOT EXISTS favoritos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    usuario TEXT,
-    documento_id INTEGER
-)
-""")
-
 conn.commit()
 
 # =========================
-# LOGIN SIMPLES
+# FUNÇÃO HASH SENHA
 # =========================
 
-st.sidebar.title("🔐 Login")
-usuario = st.sidebar.text_input("Nome do utilizador")
-
-if usuario:
-    st.sidebar.success(f"Bem-vindo, {usuario}")
-
-menu = st.sidebar.radio("Menu", ["🏠 Início", "📚 Biblioteca Oficial"])
+def hash_senha(senha):
+    return hashlib.sha256(senha.encode()).hexdigest()
 
 # =========================
-# INÍCIO
+# SESSÃO
 # =========================
 
-if menu == "🏠 Início":
-    st.title("🇦🇴 Plataforma Pedagógica Digital")
-    st.subheader("Ensino Primário - Angola")
+if "logado" not in st.session_state:
+    st.session_state.logado = False
 
 # =========================
-# BIBLIOTECA
+# REGISTO / LOGIN
 # =========================
 
-elif menu == "📚 Biblioteca Oficial":
+if not st.session_state.logado:
 
-    st.title("📚 Biblioteca Oficial")
+    aba1, aba2 = st.tabs(["🔐 Login", "📝 Registar"])
 
-    aba1, aba2 = st.tabs(["📎 Upload (Admin)", "📂 Documentos"])
-
-    # -------------------------
-    # UPLOAD ADMIN
-    # -------------------------
+    # LOGIN
     with aba1:
+        email = st.text_input("Email")
+        senha = st.text_input("Senha", type="password")
 
-        senha_admin = st.text_input("Senha de Administrador", type="password")
+        if st.button("Entrar"):
+            c.execute("SELECT * FROM usuarios WHERE email=? AND senha=?",
+                      (email, hash_senha(senha)))
+            user = c.fetchone()
 
-        if senha_admin == "admin123":
+            if user:
+                st.session_state.logado = True
+                st.session_state.usuario_id = user[0]
+                st.session_state.usuario_nome = user[1]
+                st.session_state.tipo = user[4]
+                st.rerun()
+            else:
+                st.error("Credenciais inválidas")
+
+    # REGISTO
+    with aba2:
+        nome = st.text_input("Nome completo")
+        email_reg = st.text_input("Email")
+        senha_reg = st.text_input("Senha", type="password")
+
+        if st.button("Criar Conta"):
+            try:
+                c.execute("INSERT INTO usuarios (nome, email, senha, tipo) VALUES (?, ?, ?, ?)",
+                          (nome, email_reg, hash_senha(senha_reg), "professor"))
+                conn.commit()
+                st.success("Conta criada com sucesso!")
+            except:
+                st.error("Email já existe")
+
+# =========================
+# ÁREA LOGADA
+# =========================
+
+else:
+
+    st.sidebar.success(f"👤 {st.session_state.usuario_nome}")
+    if st.sidebar.button("Sair"):
+        st.session_state.logado = False
+        st.rerun()
+
+    menu = st.sidebar.radio("Menu", ["🏠 Início", "📚 Biblioteca"])
+
+    if menu == "🏠 Início":
+        st.title("🇦🇴 Plataforma Pedagógica Digital")
+        st.subheader("Sistema Nacional de Apoio ao Professor")
+
+    if menu == "📚 Biblioteca":
+
+        st.title("📚 Biblioteca Oficial")
+
+        # ADMIN pode adicionar
+        if st.session_state.tipo == "admin":
+
+            st.subheader("Adicionar Documento Oficial")
 
             titulo = st.text_input("Título")
             classe = st.selectbox("Classe",
                                   ["Iniciação", "1ª Classe", "2ª Classe",
                                    "3ª Classe", "4ª Classe",
                                    "5ª Classe", "6ª Classe"])
-
             disciplina = st.text_input("Disciplina")
-
-            tipo_doc = st.selectbox("Tipo de Documento",
+            tipo_doc = st.selectbox("Tipo",
                                     ["Programa Oficial",
                                      "Livro do Aluno",
-                                     "Guia Metodológico",
-                                     "Manual do Professor"])
+                                     "Guia Metodológico"])
 
-            uploaded_file = st.file_uploader("Anexar (PDF ou DOCX)", type=["pdf", "docx"])
+            uploaded_file = st.file_uploader("PDF ou DOCX", type=["pdf", "docx"])
 
             if st.button("Guardar Documento"):
-                if uploaded_file and titulo:
-
-                    caminho = os.path.join(PASTA_DOCS, uploaded_file.name)
-
-                    with open(caminho, "wb") as f:
-                        f.write(uploaded_file.getbuffer())
-
-                    c.execute("""
-                    INSERT INTO documentos (titulo, classe, disciplina, tipo, nome_arquivo)
-                    VALUES (?, ?, ?, ?, ?)
-                    """, (titulo, classe, disciplina, tipo_doc, uploaded_file.name))
-
-                    conn.commit()
-
-                    st.success("Documento guardado com sucesso!")
-
-        else:
-            st.info("Área restrita ao administrador.")
-
-    # -------------------------
-    # LISTAGEM DOCUMENTOS
-    # -------------------------
-    with aba2:
-
-        filtro_classe = st.selectbox("Filtrar por Classe",
-                                     ["Todas", "Iniciação", "1ª Classe",
-                                      "2ª Classe", "3ª Classe",
-                                      "4ª Classe", "5ª Classe",
-                                      "6ª Classe"])
-
-        query = "SELECT * FROM documentos"
-
-        if filtro_classe != "Todas":
-            query += " WHERE classe=?"
-            c.execute(query, (filtro_classe,))
-        else:
-            c.execute(query)
-
-        documentos = c.fetchall()
-
-        for doc in documentos:
-
-            doc_id = doc[0]
-            titulo = doc[1]
-            classe = doc[2]
-            disciplina = doc[3]
-            tipo = doc[4]
-            arquivo = doc[5]
-
-            st.divider()
-            col1, col2, col3 = st.columns([4,1,1])
-
-            col1.write(f"📄 {titulo}")
-            col1.write(f"Classe: {classe} | Disciplina: {disciplina} | Tipo: {tipo}")
-
-            with open(os.path.join(PASTA_DOCS, arquivo), "rb") as f:
-                col2.download_button("📥 Baixar", f, file_name=arquivo)
-
-            if usuario:
-                c.execute("SELECT * FROM favoritos WHERE usuario=? AND documento_id=?",
-                          (usuario, doc_id))
-                fav = c.fetchone()
-
-                if fav:
-                    if col3.button("⭐ Remover", key=f"rem_{doc_id}"):
-                        c.execute("DELETE FROM favoritos WHERE usuario=? AND documento_id=?",
-                                  (usuario, doc_id))
-                        conn.commit()
-                        st.rerun()
-                else:
-                    if col3.button("☆ Favoritar", key=f"fav_{doc_id}"):
-                        c.execute("INSERT INTO favoritos (usuario, documento_id) VALUES (?, ?)",
-                                  (usuario, doc_id))
-                        conn.commit()
-                        st.rerun()
+                if uploaded_file:

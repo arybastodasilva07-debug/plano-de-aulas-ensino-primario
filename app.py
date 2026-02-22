@@ -10,62 +10,72 @@ st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
 st.title("🇦🇴 SISTEMA PROFISSIONAL DE ELABORAÇÃO DE PLANO DE AULA")
 st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 
+# Função para exibir PDF online sem opção de download simples
+def exibir_pdf(file):
+    base64_pdf = base64.b64encode(file.read()).decode('utf-8')
+    # Oculta a barra de ferramentas do PDF (incluindo o botão de download) com #toolbar=0
+    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}#toolbar=0" width="100%" height="600" type="application/pdf"></iframe>'
+    st.markdown(pdf_display, unsafe_allow_html=True)
+
 # --- JANELAS PRINCIPAIS (ABAS) ---
-# Adicionamos a nova aba "📚 Livros"
 tab_gerador, tab_documentos, tab_livros = st.tabs([
     "📝 Gerador de Planos", 
     "📂 Central de Documentos", 
-    "📚 Livros"
+    "📚 Livros por Classe"
 ])
+
+# Inicializar dicionário de livros no estado da sessão para não perder ao trocar de aba
+if 'biblioteca' not in st.session_state:
+    st.session_state.biblioteca = {f"{i}ª Classe": [] for i in range(1, 7)}
+    st.session_state.biblioteca["Iniciação"] = []
 
 # --- JANELA 1: GERADOR DE PLANOS ---
 with tab_gerador:
     st.header("Gerador de Planos de Aula")
-    # (Seu código do gerador aqui)
+    st.info("Área destinada à criação de planos com IA.")
 
-# --- JANELA 2: CENTRAL DE DOCUMENTOS ---
+# --- JANELA 2: CENTRAL DE DOCUMENTOS (Upload) ---
 with tab_documentos:
-    st.header("📂 Gestão de Ficheiros")
-    # (Seu código de upload aqui)
+    st.header("📂 Upload de Materiais")
+    
+    tipo_material = st.radio("O que deseja carregar?", ["Documento Geral", "Livro Escolar"])
+    
+    if tipo_material == "Livro Escolar":
+        classe_alvo = st.selectbox("Para qual classe é este livro?", list(st.session_state.biblioteca.keys()))
+        arquivo_livro = st.file_uploader("Carregar Livro (PDF)", type=['pdf'], key="up_livro")
+        if arquivo_livro:
+            if st.button("Guardar na Biblioteca"):
+                st.session_state.biblioteca[classe_alvo].append(arquivo_livro)
+                st.success(f"Livro '{arquivo_livro.name}' adicionado à {classe_alvo}!")
+    else:
+        arquivo_doc = st.file_uploader("Carregar Documento Geral (PDF)", type=['pdf'], key="up_doc")
+        if arquivo_doc:
+            st.subheader(f"Visualizando: {arquivo_doc.name}")
+            exibir_pdf(arquivo_doc)
 
-# --- JANELA 3: LIVROS (Organizados por Classes) ---
+# --- JANELA 3: LIVROS (Visualização por Classes) ---
 with tab_livros:
-    st.header("📚 Biblioteca Escolar (Manuais INIDE)")
-    st.write("Selecione a classe para aceder aos manuais disponíveis.")
+    st.header("📚 Biblioteca Digital INIDE")
+    st.write("Selecione um livro para leitura online.")
 
-    # Organização por Expansores de Classe
-    with st.expander("📂 Iniciação"):
-        col1, col2 = st.columns(2)
-        with col1:
-            st.write("Manual de Língua Portuguesa")
-            st.button("Visualizar PDF", key="ver_ini_lp")
-        with col2:
-            st.write("Manual de Estudo do Meio")
-            st.button("Visualizar PDF", key="ver_ini_em")
+    for classe, livros in st.session_state.biblioteca.items():
+        with st.expander(f"📂 {classe}"):
+            if not livros:
+                st.write("Nenhum livro carregado para esta classe.")
+            else:
+                for idx, livro in enumerate(livros):
+                    col1, col2 = st.columns([3, 1])
+                    with col1:
+                        st.write(f"📖 {livro.name}")
+                    with col2:
+                        if st.button("Ler Online", key=f"read_{classe}_{idx}"):
+                            st.session_state.livro_atual = livro
 
-    with st.expander("📂 1ª Classe"):
-        st.info("Lista de manuais para a 1ª Classe...")
-        # Exemplo de como você pode listar
-        st.checkbox("Matemática - 1ª Classe")
-        st.checkbox("Língua Portuguesa - 1ª Classe")
-
-    with st.expander("📂 2ª Classe"):
-        st.write("Conteúdo em atualização...")
-
-    with st.expander("📂 3ª Classe"):
-        st.write("Conteúdo em atualização...")
-
-    with st.expander("📂 4ª Classe"):
-        st.write("Conteúdo em atualização...")
-
-    with st.expander("📂 5ª Classe"):
-        st.write("Manual de História - 5ª Classe")
-        st.write("Manual de Geografia - 5ª Classe")
-
-    with st.expander("📂 6ª Classe"):
-        st.write("Manual de História - 6ª Classe")
-        st.write("Manual de Geografia - 6ª Classe")
-        st.button("Baixar Kit Completo 6ª Classe")
+    # Área de Leitura (Abaixo da lista)
+    if 'livro_atual' in st.session_state:
+        st.divider()
+        st.subheader(f"Leitura Online: {st.session_state.livro_atual.name}")
+        exibir_pdf(st.session_state.livro_atual)
 
 # --- BARRA LATERAL ---
 with st.sidebar:
@@ -766,6 +776,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

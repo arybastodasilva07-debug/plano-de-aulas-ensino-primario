@@ -12,6 +12,66 @@ st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
 st.title("🇦🇴 SISTEMA PROFISSIONAL DE ELABORAÇÃO DE PLANO DE AULA")
 st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 
+# --- 1. CONFIGURAÇÃO DE SEGURANÇA E PERFIS ---
+# Definimos quem é o administrador (você)
+ADMIN_USER = "arybastodasilva07email@gmail.com" 
+
+def verificar_acesso():
+    if "autenticado" not in st.session_state:
+        st.session_state.autenticado = False
+    
+    if not st.session_state.autenticado:
+        st.title("🔐 Acesso Restrito - Gestão Pedagógica")
+        st.info("Para aceder à plataforma, faça login e introduza o código enviado pelo administrador.")
+        
+        email = st.text_input("arybastodasilva07email@gmail.com")
+        codigo = st.text_input("Código de Ativação", type="password")
+        
+        if st.button("Entrar"):
+            # Aqui você definiria os códigos válidos ou verificaria numa base de dados
+            if codigo == "ANGOLA2024": # Exemplo de código que você daria ao usuário
+                st.session_state.autenticado = True
+                st.session_state.user_email = email
+                st.rerun()
+            else:
+                st.error("Código inválido. Solicite o código ao administrador.")
+                # Link ou botão para enviar e-mail para você
+                st.markdown(f"📧 [Solicitar Código ao Administrador](mailto:{ADMIN_USER}?subject=Solicitação de Acesso App)")
+        return False
+    return True
+
+# --- 2. EXECUÇÃO DA APP ---
+if verificar_acesso():
+    # Identificar se é Admin ou Usuário Comum
+    is_admin = (st.session_state.user_email == ADMIN_USER)
+
+    # --- ABAS ---
+    # Se não for admin, ele nem vê a aba de "Configurações" se você não quiser
+    if is_admin:
+        tabs = st.tabs(["📝 Gerador", "📂 Gestão de Ficheiros", "📚 Biblioteca", "⚙️ Painel Admin"])
+    else:
+        tabs = st.tabs(["📝 Gerador", "📚 Biblioteca"])
+
+    # --- ABA LIVROS (Exemplo de Restrição) ---
+    with tabs[1 if not is_admin else 2]: # Ajusta a aba dependendo de quem logou
+        st.header("📚 Biblioteca Digital")
+        
+        # LISTAGEM DOS LIVROS
+        # ... (código anterior de listagem) ...
+        
+        # RESTRIÇÃO DE GESTÃO:
+        if is_admin:
+            if st.button("🗑️ Apagar Livro (SÓ VOCÊ VÊ ISTO)"):
+                # Lógica de apagar
+                pass
+        else:
+            st.caption("Acesso de leitura: Não é permitido apagar ou alterar ficheiros.")
+
+    # --- BOTÃO DE SAIR ---
+    if st.sidebar.button("Sair / Logout"):
+        st.session_state.autenticado = False
+        st.rerun()
+
 # --- SISTEMA DE ARMAZENAMENTO PERMANENTE ---
 # Criar a pasta base se não existir
 BASE_DIR = "biblioteca_permanente"
@@ -829,6 +889,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

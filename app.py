@@ -22,32 +22,32 @@ client = OpenAI(api_key=api_key)
 curriculo = {
     "Iniciação": {
         "Língua Portuguesa": {
-            "Alfabetização": 
-                "Letras e Sons": ["Estudo das vogais"],
-                "Palavras Simples": ["Estudo das vogais"],
-            "Leitura Inicial": ["Compreensão de pequenas histórias", "Identificação de personagens"]
-        },
-        "Matemática": {
-            "Números": ["Contagem até 10", "Comparação de quantidades", "Sequências numéricas"],
-                "Contagem até 10", 
-                "Comparação de quantidades", 
-                "Sequências numéricas"
-            "Formas e Medidas": ["Formas básicas", "Tamanho e comprimento", "Noções de tempo"]
+            "TEMA 2 – A MINHA FAMÍLIA E EU": {
+                "Estudo das Vogais": ["Letra I", "Letra O", "Letra U", "Letra E", "Letra A"],
+                "Sons e Ditongos": ["Vogais nasais", "Ditongos orais", "Ditongos nasais"]
+            },
+            "TEMA 3 – EU VOU À ESCOLA": {
+                "Consoantes Iniciais": ["Estudo da letra P", "Estudo da letra B", "Estudo da letra M"],
+                "Consoantes Dentais": ["Estudo da letra T", "Estudo da letra D"]
+            }
         },
         "Estudo do Meio": {
-            "O Meu Corpo": ["Partes do corpo", "Sentidos"],
-            "Família e Escola": ["Família", "Regras da Escola", "Amigos e colegas"]
+            "TEMA 1 - A DESCOBERTA DE SI PRÓPRIO": {
+                "O Meu Corpo": ["Identificação pessoal", "Partes do corpo", "Órgãos dos sentidos"],
+                "Higiene e Saúde": ["Higiene corporal", "Higiene alimentar", "Vacinas"]
+            },
+            "TEMA 5 - ALIMENTAÇÃO": {
+                "Importância": ["Necessidade de alimentação", "Alimentação rica e variada"],
+                "Origem e Cuidados": ["Fonte dos alimentos", "Cuidados a ter com os alimentos"]
+            }
         },
-        "Educação Visual e Plástica": {
-            "Desenho e Pintura": ["Cores primárias", "Formas geométricas simples"],
-            "Modelagem": ["Massinha", "Argila simples"]
-        },
-        "Educação Física": {
-            "Movimento": ["Correr", "Pular", "Equilíbrio"],
-            "Jogos Simples": ["Brincadeiras de roda", "Cooperação em grupo"]
+        "Matemática": {
+            "TEMA 2 – NÚMEROS E OPERAÇÕES": {
+                "Números Naturais": ["Números de 1 a 10", "Números de 11 a 20", "A Dezena"],
+                "Operações": ["Adição até 9", "Subtracção até 9", "Algoritmo vertical"]
+            }
         }
     },
-
     # ----------------- 1ª Classe -----------------
     "1ª Classe": {
         "Língua Portuguesa": {
@@ -701,6 +701,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

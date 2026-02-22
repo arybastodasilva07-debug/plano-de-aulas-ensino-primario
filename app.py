@@ -22,11 +22,10 @@ client = OpenAI(api_key=api_key)
 curriculo = {
     "Iniciação": {
         "Língua Portuguesa": {
-            "Alfabetização": [
+            "Alfabetização": 
                 "Letras e Sons": ["Estudo das vogais"],
                 "Palavras Simples": ["Estudo das vogais"],
             "Leitura Inicial": ["Compreensão de pequenas histórias", "Identificação de personagens"]
-            ]
         },
         "Matemática": {
             "Números": ["Contagem até 10", "Comparação de quantidades", "Sequências numéricas"],
@@ -702,6 +701,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

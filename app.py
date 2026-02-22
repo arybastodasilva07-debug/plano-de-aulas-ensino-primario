@@ -12,12 +12,6 @@ st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
 st.title("🇦🇴 SISTEMA PROFISSIONAL DE ELABORAÇÃO DE PLANO DE AULA")
 st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 
-import streamlit as st
-import base64
-
-# --- CONFIGURAÇÃO DA PÁGINA ---
-st.set_page_config(page_title="Plano de Aula - Angola", layout="wide")
-
 # --- ESTILO CSS PARA MELHORAR A INTERFACE ---
 st.markdown("""
     <style>
@@ -819,6 +813,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

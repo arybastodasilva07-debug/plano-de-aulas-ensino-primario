@@ -626,27 +626,28 @@ Gere um plano de aula completo baseado no currículo oficial do INIDE (Angola).
 
 Escola: {nome_escola}
 Professor: {nome_professor}
-Disciplina: {disciplina}
 Classe: {classe}
 Trimestre: {trimestre}
 Tempo: {tempo}
 Aula nº: {aula_numero}
+Disciplina: {disciplina}
 Unidade temática: {tema}
 Subtema: {subtema}
-
+Sumário_Assunto: {Sumário_Assunto}
 Se o subtema for amplo, divida em mais de uma aula de 45 minutos.
 
 Estrutura obrigatória:
-1. Objetivo Geral
+1. Objetivo Geral do Tema
 2. Objetivos da Aula
 3. Conteúdo
 4. Material Didáctico
-5. Metodologia
+5. Metodologia (Métodos)
 6. Actividades Chave
 7. Tipo de Avaliação
-8. Procedimentos:
-    - Introdução
+8. Procedimentos (O passo a passo):
+    - Introdução (Acolhimento, motivação e apresentação
     - Desenvolvimento
+    -Actividades ou exercícios
     - Consolidação
     - Avaliação
     - Tarefa para Casa
@@ -703,6 +704,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

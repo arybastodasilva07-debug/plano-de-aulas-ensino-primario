@@ -10,91 +10,71 @@ st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
 st.title("🇦🇴 SISTEMA PROFISSIONAL DE ELABORAÇÃO DE PLANO DE AULA")
 st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 
-# --- FUNÇÃO DE VISUALIZAÇÃO REFORÇADA ---
-def exibir_pdf(file_content, file_name):
-    try:
-        # Converter o conteúdo para base64
-        base64_pdf = base64.b64encode(file_content).decode('utf-8')
-        
-        # Criar o objeto HTML para visualização
-        # O parâmetro #toolbar=0 e #navpanes=0 tenta ocultar opções de download
-        pdf_display = f'''
-            <div style="border: 1px solid #ccc; border-radius: 5px; overflow: hidden;">
-                <iframe src="data:application/pdf;base64,{base64_pdf}#toolbar=0" 
-                width="100%" height="800px" style="border: none;">
-                </iframe>
-            </div>
-        '''
-        st.markdown(f"### Visualizando: {file_name}")
-        st.markdown(pdf_display, unsafe_allow_html=True)
-    except Exception as e:
-        st.error(f"Erro ao carregar o visualizador: {e}")
+import streamlit as st
 
-# --- INICIALIZAÇÃO DO ESTADO (Para não perder dados) ---
-if 'biblioteca' not in st.session_state:
-    classes = ["Iniciação", "1ª Classe", "2ª Classe", "3ª Classe", "4ª Classe", "5ª Classe", "6ª Classe"]
-    st.session_state.biblioteca = {classe: [] for classe in classes}
-if 'livro_para_leitura' not in st.session_state:
-    st.session_state.livro_para_leitura = None
+# --- CONFIGURAÇÃO DA PÁGINA ---
+st.set_page_config(page_title="Plano de Aula - Angola", layout="wide")
 
-# --- JANELAS (ABAS) ---
+# --- JANELAS PRINCIPAIS (ABAS) ---
+# Adicionamos a nova aba "📚 Livros"
 tab_gerador, tab_documentos, tab_livros = st.tabs([
     "📝 Gerador de Planos", 
     "📂 Central de Documentos", 
-    "📚 Livros por Classe"
+    "📚 Livros"
 ])
 
-# --- JANELA 2: CENTRAL DE DOCUMENTOS (Upload) ---
+# --- JANELA 1: GERADOR DE PLANOS ---
+with tab_gerador:
+    st.header("Gerador de Planos de Aula")
+    # (Seu código do gerador aqui)
+
+# --- JANELA 2: CENTRAL DE DOCUMENTOS ---
 with tab_documentos:
-    st.header("📂 Upload de Materiais")
-    
-    tipo_material = st.radio("Destino do arquivo:", ["Documento Geral", "Livro Escolar"])
-    
-    if tipo_material == "Livro Escolar":
-        classe_alvo = st.selectbox("Selecione a Classe:", list(st.session_state.biblioteca.keys()))
-        arquivo_livro = st.file_uploader("Carregar Livro (PDF)", type=['pdf'], key="up_livro")
-        
-        if arquivo_livro:
-            if st.button("Confirmar e Guardar na Biblioteca"):
-                # Lemos o conteúdo binário para garantir que ele persiste
-                conteudo = arquivo_livro.read()
-                st.session_state.biblioteca[classe_alvo].append({
-                    "nome": arquivo_livro.name,
-                    "dados": conteudo
-                })
-                st.success(f"O livro '{arquivo_livro.name}' foi guardado na pasta da {classe_alvo}!")
-    else:
-        arquivo_doc = st.file_uploader("Carregar Documento Geral (PDF)", type=['pdf'], key="up_doc")
-        if arquivo_doc:
-            conteudo_doc = arquivo_doc.read()
-            exibir_pdf(conteudo_doc, arquivo_doc.name)
+    st.header("📂 Gestão de Ficheiros")
+    # (Seu código de upload aqui)
 
-# --- JANELA 3: LIVROS (Organização por Classe) ---
+# --- JANELA 3: LIVROS (Organizados por Classes) ---
 with tab_livros:
-    st.header("📚 Biblioteca Digital INIDE")
-    st.info("Clique no livro para abrir o leitor abaixo.")
+    st.header("📚 Biblioteca Escolar (Manuais INIDE)")
+    st.write("Selecione a classe para aceder aos manuais disponíveis.")
 
-    # Listagem de Classes
-    for classe, livros in st.session_state.biblioteca.items():
-        with st.expander(f"📂 {classe} ({len(livros)} livros)"):
-            if not livros:
-                st.write("Nenhum livro nesta classe.")
-            else:
-                for idx, livro in enumerate(livros):
-                    col1, col2 = st.columns([4, 1])
-                    col1.write(f"📖 {livro['nome']}")
-                    # Botão para selecionar o livro
-                    if col2.button("Visualizar", key=f"btn_{classe}_{idx}"):
-                        st.session_state.livro_para_leitura = livro
+    # Organização por Expansores de Classe
+    with st.expander("📂 Iniciação"):
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("Manual de Língua Portuguesa")
+            st.button("Visualizar PDF", key="ver_ini_lp")
+        with col2:
+            st.write("Manual de Estudo do Meio")
+            st.button("Visualizar PDF", key="ver_ini_em")
 
-    # Espaço do Leitor (Só aparece se um livro for selecionado)
-    if st.session_state.livro_para_leitura:
-        st.divider()
-        if st.button("❌ Fechar Leitor"):
-            st.session_state.livro_para_leitura = None
-            st.rerun()
-        else:
-            exibir_pdf(st.session_state.livro_para_leitura['dados'], st.session_state.livro_para_leitura['nome'])
+    with st.expander("📂 1ª Classe"):
+        st.info("Lista de manuais para a 1ª Classe...")
+        # Exemplo de como você pode listar
+        st.checkbox("Matemática - 1ª Classe")
+        st.checkbox("Língua Portuguesa - 1ª Classe")
+
+    with st.expander("📂 2ª Classe"):
+        st.write("Conteúdo em atualização...")
+
+    with st.expander("📂 3ª Classe"):
+        st.write("Conteúdo em atualização...")
+
+    with st.expander("📂 4ª Classe"):
+        st.write("Conteúdo em atualização...")
+
+    with st.expander("📂 5ª Classe"):
+        st.write("Manual de História - 5ª Classe")
+        st.write("Manual de Geografia - 5ª Classe")
+
+    with st.expander("📂 6ª Classe"):
+        st.write("Manual de História - 6ª Classe")
+        st.write("Manual de Geografia - 6ª Classe")
+        st.button("Baixar Kit Completo 6ª Classe")
+
+# --- BARRA LATERAL ---
+with st.sidebar:
+    st.title("⚙️ Painel de Controle")
 
 # ---------------- OPENAI CLIENT ----------------
 api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
@@ -791,6 +771,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

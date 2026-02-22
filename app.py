@@ -4,7 +4,6 @@ from docx import Document
 from docx.shared import Inches
 import io
 import os
-import base64
 
 # ---------------- CONFIGURAÇÃO ----------------
 st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
@@ -96,10 +95,6 @@ with tab_livros:
             st.rerun()
         else:
             exibir_pdf(st.session_state.livro_para_leitura['dados'], st.session_state.livro_para_leitura['nome'])
-
-# --- BARRA LATERAL ---
-with st.sidebar:
-    st.title("⚙️ Painel de Controle")
 
 # ---------------- OPENAI CLIENT ----------------
 api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
@@ -796,6 +791,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

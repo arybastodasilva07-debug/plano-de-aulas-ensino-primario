@@ -1,49 +1,51 @@
 import streamlit as st
 import os
-import json
+import sqlite3
 
 st.set_page_config(page_title="Plataforma Pedagógica Angola", layout="wide")
 
-# =========================
-# CONFIGURAÇÕES INICIAIS
-# =========================
-
 PASTA_DOCS = "documentos_oficiais"
-FAVORITOS_FILE = "favoritos.json"
 
 if not os.path.exists(PASTA_DOCS):
     os.makedirs(PASTA_DOCS)
 
-if not os.path.exists(FAVORITOS_FILE):
-    with open(FAVORITOS_FILE, "w") as f:
-        json.dump({}, f)
-
 # =========================
-# FUNÇÕES AUXILIARES
+# BASE DE DADOS SQLITE
 # =========================
 
-def carregar_favoritos():
-    with open(FAVORITOS_FILE, "r") as f:
-        return json.load(f)
+conn = sqlite3.connect("plataforma.db", check_same_thread=False)
+c = conn.cursor()
 
-def salvar_favoritos(dados):
-    with open(FAVORITOS_FILE, "w") as f:
-        json.dump(dados, f)
+c.execute("""
+CREATE TABLE IF NOT EXISTS documentos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    titulo TEXT,
+    classe TEXT,
+    disciplina TEXT,
+    tipo TEXT,
+    nome_arquivo TEXT
+)
+""")
+
+c.execute("""
+CREATE TABLE IF NOT EXISTS favoritos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario TEXT,
+    documento_id INTEGER
+)
+""")
+
+conn.commit()
 
 # =========================
 # LOGIN SIMPLES
 # =========================
 
 st.sidebar.title("🔐 Login")
-
 usuario = st.sidebar.text_input("Nome do utilizador")
 
 if usuario:
     st.sidebar.success(f"Bem-vindo, {usuario}")
-
-# =========================
-# MENU PRINCIPAL
-# =========================
 
 menu = st.sidebar.radio("Menu", ["🏠 Início", "📚 Biblioteca Oficial"])
 
@@ -54,10 +56,9 @@ menu = st.sidebar.radio("Menu", ["🏠 Início", "📚 Biblioteca Oficial"])
 if menu == "🏠 Início":
     st.title("🇦🇴 Plataforma Pedagógica Digital")
     st.subheader("Ensino Primário - Angola")
-    st.write("Sistema oficial de apoio ao professor.")
 
 # =========================
-# BIBLIOTECA OFICIAL
+# BIBLIOTECA
 # =========================
 
 elif menu == "📚 Biblioteca Oficial":
@@ -66,59 +67,55 @@ elif menu == "📚 Biblioteca Oficial":
 
     aba1, aba2 = st.tabs(["📎 Upload (Admin)", "📂 Documentos"])
 
-    # -----------------------
-    # ABA UPLOAD (ADMIN)
-    # -----------------------
+    # -------------------------
+    # UPLOAD ADMIN
+    # -------------------------
     with aba1:
+
         senha_admin = st.text_input("Senha de Administrador", type="password")
 
         if senha_admin == "admin123":
 
-            st.subheader("Adicionar Documento Oficial")
-
-            titulo = st.text_input("Título do Documento")
-            classe = st.selectbox("Classe", 
+            titulo = st.text_input("Título")
+            classe = st.selectbox("Classe",
                                   ["Iniciação", "1ª Classe", "2ª Classe",
-                                   "3ª Classe", "4ª Classe", 
+                                   "3ª Classe", "4ª Classe",
                                    "5ª Classe", "6ª Classe"])
 
             disciplina = st.text_input("Disciplina")
+
             tipo_doc = st.selectbox("Tipo de Documento",
                                     ["Programa Oficial",
                                      "Livro do Aluno",
                                      "Guia Metodológico",
                                      "Manual do Professor"])
 
-            uploaded_file = st.file_uploader(
-                "Anexar documento (PDF ou DOCX)",
-                type=["pdf", "docx"]
-            )
+            uploaded_file = st.file_uploader("Anexar (PDF ou DOCX)", type=["pdf", "docx"])
 
             if st.button("Guardar Documento"):
                 if uploaded_file and titulo:
-                    nome_final = f"{classe}_{disciplina}_{titulo}_{uploaded_file.name}"
-                    caminho = os.path.join(PASTA_DOCS, nome_final)
+
+                    caminho = os.path.join(PASTA_DOCS, uploaded_file.name)
 
                     with open(caminho, "wb") as f:
                         f.write(uploaded_file.getbuffer())
 
+                    c.execute("""
+                    INSERT INTO documentos (titulo, classe, disciplina, tipo, nome_arquivo)
+                    VALUES (?, ?, ?, ?, ?)
+                    """, (titulo, classe, disciplina, tipo_doc, uploaded_file.name))
+
+                    conn.commit()
+
                     st.success("Documento guardado com sucesso!")
-                else:
-                    st.warning("Preencha todos os campos.")
 
         else:
             st.info("Área restrita ao administrador.")
 
-    # -----------------------
-    # ABA DOCUMENTOS
-    # -----------------------
+    # -------------------------
+    # LISTAGEM DOCUMENTOS
+    # -------------------------
     with aba2:
-
-        favoritos = carregar_favoritos()
-
-        if usuario and usuario not in favoritos:
-            favoritos[usuario] = []
-            salvar_favoritos(favoritos)
 
         filtro_classe = st.selectbox("Filtrar por Classe",
                                      ["Todas", "Iniciação", "1ª Classe",
@@ -126,50 +123,48 @@ elif menu == "📚 Biblioteca Oficial":
                                       "4ª Classe", "5ª Classe",
                                       "6ª Classe"])
 
-        mostrar_favoritos = st.checkbox("Mostrar apenas favoritos")
+        query = "SELECT * FROM documentos"
 
-        arquivos = os.listdir(PASTA_DOCS)
+        if filtro_classe != "Todas":
+            query += " WHERE classe=?"
+            c.execute(query, (filtro_classe,))
+        else:
+            c.execute(query)
 
-        for arquivo in arquivos:
+        documentos = c.fetchall()
 
-            if filtro_classe != "Todas" and not arquivo.startswith(filtro_classe):
-                continue
+        for doc in documentos:
 
-            if mostrar_favoritos and usuario:
-                if arquivo not in favoritos.get(usuario, []):
-                    continue
+            doc_id = doc[0]
+            titulo = doc[1]
+            classe = doc[2]
+            disciplina = doc[3]
+            tipo = doc[4]
+            arquivo = doc[5]
 
             st.divider()
             col1, col2, col3 = st.columns([4,1,1])
 
-            col1.write(f"📄 {arquivo}")
+            col1.write(f"📄 {titulo}")
+            col1.write(f"Classe: {classe} | Disciplina: {disciplina} | Tipo: {tipo}")
 
-            # Visualizar PDF online
-            if arquivo.endswith(".pdf"):
-                with open(os.path.join(PASTA_DOCS, arquivo), "rb") as f:
-                    col2.download_button(
-                        "📥 Baixar",
-                        f,
-                        file_name=arquivo
-                    )
-            else:
-                with open(os.path.join(PASTA_DOCS, arquivo), "rb") as f:
-                    col2.download_button(
-                        "📥 Baixar",
-                        f,
-                        file_name=arquivo
-                    )
+            with open(os.path.join(PASTA_DOCS, arquivo), "rb") as f:
+                col2.download_button("📥 Baixar", f, file_name=arquivo)
 
-            # Favoritos
             if usuario:
-                if arquivo in favoritos.get(usuario, []):
-                    if col3.button("⭐ Remover", key=arquivo):
-                        favoritos[usuario].remove(arquivo)
-                        salvar_favoritos(favoritos)
+                c.execute("SELECT * FROM favoritos WHERE usuario=? AND documento_id=?",
+                          (usuario, doc_id))
+                fav = c.fetchone()
+
+                if fav:
+                    if col3.button("⭐ Remover", key=f"rem_{doc_id}"):
+                        c.execute("DELETE FROM favoritos WHERE usuario=? AND documento_id=?",
+                                  (usuario, doc_id))
+                        conn.commit()
                         st.rerun()
                 else:
-                    if col3.button("☆ Favoritar", key=arquivo):
-                        favoritos[usuario].append(arquivo)
-                        salvar_favoritos(favoritos)
+                    if col3.button("☆ Favoritar", key=f"fav_{doc_id}"):
+                        c.execute("INSERT INTO favoritos (usuario, documento_id) VALUES (?, ?)",
+                                  (usuario, doc_id))
+                        conn.commit()
                         st.rerun()
-

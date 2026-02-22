@@ -10,6 +10,59 @@ st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
 st.title("🇦🇴 SISTEMA PROFISSIONAL DE ELABORAÇÃO DE PLANO DE AULA")
 st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 
+# --- JANELAS PRINCIPAIS (ABAS) ---
+# Criamos as duas janelas que você solicitou
+tab_gerador, tab_documentos = st.tabs(["📝 Gerador de Planos", "📂 Central de Documentos"])
+
+# --- JANELA 1: GERADOR DE PLANOS ---
+with tab_gerador:
+    st.header("Gerador Automático de Planos de Aula")
+    st.info("Preencha os dados na barra lateral e clique em gerar.")
+    
+    # Aqui vai o código que já criamos para o formulário e a IA
+    # ... (Seu código de inputs e botão de gerar)
+
+# --- JANELA 2: CENTRAL DE DOCUMENTOS (A sua nova aba) ---
+with tab_documentos:
+    st.header("📂 Gestão de Ficheiros e Manuais")
+    st.write("Carregue aqui os seus Manuais do INIDE, Dosificações ou modelos em Word.")
+    
+    # 1. Área de Upload
+    with st.container():
+        st.markdown("### Submeter Novo Ficheiro")
+        arquivos = st.file_uploader(
+            "Selecione manuais (PDF) ou modelos (Word)", 
+            type=['pdf', 'docx', 'doc'], 
+            accept_multiple_files=True,
+            key="central_upload"
+        )
+
+    st.divider()
+
+    # 2. Área de Visualização e Download
+    st.markdown("### 📄 Documentos Disponíveis na Sessão")
+    if arquivos:
+        # Criamos uma grelha para mostrar os ficheiros lado a lado
+        cols = st.columns(3)
+        for i, arquivo in enumerate(arquivos):
+            with cols[i % 3]:
+                # Estilização simples para cada ficheiro
+                st.info(f"**Nome:** {arquivo.name}")
+                st.download_button(
+                    label=f"📥 Baixar {arquivo.name.split('.')[-1].upper()}",
+                    data=arquivo,
+                    file_name=arquivo.name,
+                    key=f"btn_down_{i}"
+                )
+    else:
+        st.warning("Nenhum documento carregado ainda. Arraste os seus ficheiros para a caixa acima.")
+
+# --- BARRA LATERAL (SIDEBAR) ---
+with st.sidebar:
+    st.title("⚙️ Configurações")
+    # Mantenha aqui as seleções de Classe, Disciplina e Tema 
+    # para que elas funcionem de forma global.
+
 # ---------------- OPENAI CLIENT ----------------
 api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
 if not api_key:
@@ -736,6 +789,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

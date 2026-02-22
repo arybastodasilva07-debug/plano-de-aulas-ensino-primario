@@ -11,81 +11,117 @@ st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
 st.title("🇦🇴 SISTEMA PROFISSIONAL DE ELABORAÇÃO DE PLANO DE AULA")
 st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 
-# Função para exibir PDF online sem opção de download simples
-def exibir_pdf(file_path):
-    # Abrindo o arquivo em modo leitura binária ('rb')
-    with open(file_path, "rb") as f:
-        base64_pdf = base64.b64encode(f.read()).decode('utf-8')
-    
-    # O seu iframe com o toolbar=0 para ocultar ferramentas
-    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}#toolbar=0" width="100%" height="600" type="application/pdf"></iframe>'
-    
+import streamlit as st
+import base64
+
+# --- CONFIGURAÇÃO DA PÁGINA ---
+st.set_page_config(page_title="Plano de Aula - Angola", layout="wide")
+
+# --- ESTILO CSS PARA MELHORAR A INTERFACE ---
+st.markdown("""
+    <style>
+    .stTabs [data-baseweb="tab-list"] { gap: 24px; }
+    .stTabs [data-baseweb="tab"] { height: 50px; white-space: pre-wrap; background-color: #f0f2f6; border-radius: 5px; padding: 10px; }
+    .stTabs [aria-selected="true"] { background-color: #007bff; color: white; }
+    </style>
+    """, unsafe_allow_html=True)
+
+# --- FUNÇÃO DE RENDERIZAÇÃO DE PDF ---
+def visualizar_pdf(dados_binarios):
+    """Renderiza o PDF em um iframe Base64"""
+    base64_pdf = base64.b64encode(dados_binarios).decode('utf-8')
+    # O toolbar=0 tenta esconder as opções de download do navegador
+    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}#toolbar=0" width="100%" height="1000px" type="application/pdf"></iframe>'
     st.markdown(pdf_display, unsafe_allow_html=True)
-    
 
-# --- JANELAS PRINCIPAIS (ABAS) ---
-tab_gerador, tab_documentos, tab_livros = st.tabs([
-    "📝 Gerador de Planos", 
-    "📂 Central de Documentos", 
-    "📚 Livros por Classe"
-])
-
-# Inicializar dicionário de livros no estado da sessão para não perder ao trocar de aba
+# --- INICIALIZAÇÃO DO BANCO DE DADOS TEMPORÁRIO ---
 if 'biblioteca' not in st.session_state:
-    st.session_state.biblioteca = {f"{i}ª Classe": [] for i in range(1, 7)}
-    st.session_state.biblioteca["Iniciação"] = []
+    classes = ["Iniciação", "1ª Classe", "2ª Classe", "3ª Classe", "4ª Classe", "5ª Classe", "6ª Classe"]
+    st.session_state.biblioteca = {c: [] for c in classes}
+    st.session_state.docs_gerais = []
+
+if 'pdf_ativo' not in st.session_state:
+    st.session_state.pdf_ativo = None
+
+# --- ESTRUTURA DE ABAS (JANELAS) ---
+tab_gerador, tab_documentos, tab_livros = st.tabs([
+    "📝 GERADOR DE PLANOS", 
+    "📂 CENTRAL DE DOCUMENTOS", 
+    "📚 LIVROS POR CLASSE"
+])
 
 # --- JANELA 1: GERADOR DE PLANOS ---
 with tab_gerador:
-    st.header("Gerador de Planos de Aula")
-    st.info("Área destinada à criação de planos com IA.")
+    st.header("📝 Criar Novo Plano de Aula")
+    st.info("Utilize a barra lateral para configurar os detalhes da aula.")
+    # (O código do seu gerador OpenAI entra aqui)
 
-# --- JANELA 2: CENTRAL DE DOCUMENTOS (Upload) ---
+# --- JANELA 2: CENTRAL DE DOCUMENTOS (Upload e Gestão) ---
 with tab_documentos:
-    st.header("📂 Upload de Materiais")
+    st.header("📂 Área de Upload")
     
-    tipo_material = st.radio("O que deseja carregar?", ["Documento Geral", "Livro Escolar"])
+    col_u1, col_u2 = st.columns(2)
     
-    if tipo_material == "Livro Escolar":
-        classe_alvo = st.selectbox("Para qual classe é este livro?", list(st.session_state.biblioteca.keys()))
-        arquivo_livro = st.file_uploader("Carregar Livro (PDF)", type=['pdf'], key="up_livro")
-        if arquivo_livro:
-            if st.button("Guardar na Biblioteca"):
-                st.session_state.biblioteca[classe_alvo].append(arquivo_livro)
-                st.success(f"Livro '{arquivo_livro.name}' adicionado à {classe_alvo}!")
-    else:
-        arquivo_doc = st.file_uploader("Carregar Documento Geral (PDF)", type=['pdf'], key="up_doc")
-        if arquivo_doc:
-            st.subheader(f"Visualizando: {arquivo_doc.name}")
-            exibir_pdf(arquivo_doc)
-
-# --- JANELA 3: LIVROS (Visualização por Classes) ---
-with tab_livros:
-    st.header("📚 Biblioteca Digital INIDE")
-    st.write("Selecione um livro para leitura online.")
-
-    for classe, livros in st.session_state.biblioteca.items():
-        with st.expander(f"📂 {classe}"):
-            if not livros:
-                st.write("Nenhum livro carregado para esta classe.")
-            else:
-                for idx, livro in enumerate(livros):
-                    col1, col2 = st.columns([3, 1])
-                    with col1:
-                        st.write(f"📖 {livro.name}")
-                    with col2:
-                        if st.button("Ler Online", key=f"read_{classe}_{idx}"):
-                            exibir_pdf ("caminho/do/seu/arquivo.pdf") = livro
-
-    # Área de Leitura (Abaixo da lista)
-    if 'livro_atual' in st.session_state:
-        st.divider()
-        st.subheader(f"Leitura Online: {st.session_state.livro_atual.name}")
-        exibir_pdf(st.session_state.livro_atual)
+    with col_u1:
+        st.subheader("Submeter Novo Arquivo")
+        tipo = st.radio("Destino:", ["Livro Escolar", "Documento Geral"])
         
+        if tipo == "Livro Escolar":
+            c_alvo = st.selectbox("Classe:", list(st.session_state.biblioteca.keys()))
+            u_file = st.file_uploader("Carregar PDF do Livro", type="pdf", key="up_livro")
+            if u_file and st.button("Salvar na Biblioteca"):
+                # IMPORTANTE: .getvalue() garante que pegamos os dados reais do arquivo
+                st.session_state.biblioteca[c_alvo].append({"nome": u_file.name, "dados": u_file.getvalue()})
+                st.success(f"Livro '{u_file.name}' salvo!")
+        
+        else:
+            u_doc = st.file_uploader("Carregar PDF Geral", type="pdf", key="up_doc")
+            if u_doc and st.button("Salvar Documento"):
+                st.session_state.docs_gerais.append({"nome": u_doc.name, "dados": u_doc.getvalue()})
+                st.success("Documento salvo!")
+
+    with col_u2:
+        st.subheader("Visualizar Documentos Gerais")
+        if not st.session_state.docs_gerais:
+            st.write("Nenhum documento geral carregado.")
+        for i, doc in enumerate(st.session_state.docs_gerais):
+            if st.button(f"👁️ Visualizar {doc['nome']}", key=f"v_doc_{i}"):
+                st.session_state.pdf_ativo = doc['dados']
+
+# --- JANELA 3: LIVROS (Organização por Classe) ---
+with tab_livros:
+    st.header("📚 Biblioteca Digital")
+    
+    col_lista, col_visor = st.columns([1, 2])
+    
+    with col_lista:
+        st.subheader("Classes")
+        for classe, livros in st.session_state.biblioteca.items():
+            with st.expander(f"📁 {classe}"):
+                if not livros:
+                    st.caption("Pasta vazia")
+                for j, livro in enumerate(livros):
+                    # Botão que ativa a visualização
+                    if st.button(f"📖 {livro['nome']}", key=f"liv_{classe}_{j}"):
+                        st.session_state.pdf_ativo = livro['dados']
+    
+    with col_visor:
+        st.subheader("🖥️ Leitor Online")
+        if st.session_state.pdf_ativo is not None:
+            if st.button("❌ Fechar Leitor"):
+                st.session_state.pdf_ativo = None
+                st.rerun()
+            else:
+                visualizar_pdf(st.session_state.pdf_ativo)
+        else:
+            st.info("Selecione um livro à esquerda para ler aqui.")
+
 # --- BARRA LATERAL ---
 with st.sidebar:
-    st.title("⚙️ Painel de Controle")
+    st.image("https://upload.wikimedia.org/wikipedia/commons/a/af/Flag_of_Angola.svg", width=100)
+    st.title("Configurações do Plano")
+    # Seus campos de seleção (Classe, Disciplina, etc)
+        
 
 # ---------------- OPENAI CLIENT ----------------
 api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
@@ -782,6 +818,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

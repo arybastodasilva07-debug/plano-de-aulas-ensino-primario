@@ -12,11 +12,16 @@ st.title("🇦🇴 SISTEMA PROFISSIONAL DE ELABORAÇÃO DE PLANO DE AULA")
 st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 
 # Função para exibir PDF online sem opção de download simples
-def exibir_pdf(file):
-    base64_pdf = base64.b64encode(file.read()).decode('utf-8')
-    # Oculta a barra de ferramentas do PDF (incluindo o botão de download) com #toolbar=0
+def exibir_pdf(file_path):
+    # Abrindo o arquivo em modo leitura binária ('rb')
+    with open(file_path, "rb") as f:
+        base64_pdf = base64.b64encode(f.read()).decode('utf-8')
+    
+    # O seu iframe com o toolbar=0 para ocultar ferramentas
     pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}#toolbar=0" width="100%" height="600" type="application/pdf"></iframe>'
+    
     st.markdown(pdf_display, unsafe_allow_html=True)
+    
 
 # --- JANELAS PRINCIPAIS (ABAS) ---
 tab_gerador, tab_documentos, tab_livros = st.tabs([
@@ -777,6 +782,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

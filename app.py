@@ -1,42 +1,53 @@
 import streamlit as st
-from streamlit_pdf_viewer import pdf_viewer # Biblioteca oficial para evitar bloqueios
-import base64
+from streamlit_pdf_viewer import pdf_viewer
+import os
 from openai import OpenAI
 from docx import Document
 from docx.shared import Inches
 import io
 import os
 
-
 # ---------------- CONFIGURAÇÃO ----------------
 st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
 st.title("🇦🇴 SISTEMA PROFISSIONAL DE ELABORAÇÃO DE PLANO DE AULA")
 st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 
-# --- INICIALIZAÇÃO DO ESTADO ---
-if 'biblioteca' not in st.session_state:
-    classes = ["Iniciação", "1ª Classe", "2ª Classe", "3ª Classe", "4ª Classe", "5ª Classe", "6ª Classe"]
-    st.session_state.biblioteca = {c: [] for c in classes}
-    st.session_state.docs_gerais = []
+# --- SISTEMA DE ARMAZENAMENTO PERMANENTE ---
+# Criar a pasta base se não existir
+BASE_DIR = "biblioteca_permanente"
+if not os.path.exists(BASE_DIR):
+    os.makedirs(BASE_DIR)
 
+CLASSES = ["Iniciação", "1ª Classe", "2ª Classe", "3ª Classe", "4ª Classe", "5ª Classe", "6ª Classe"]
+for c in CLASSES:
+    c_path = os.path.join(BASE_DIR, c)
+    if not os.path.exists(c_path):
+        os.makedirs(c_path)
+
+# Pasta para documentos gerais
+DOCS_GERAIS_DIR = os.path.join(BASE_DIR, "Gerais")
+if not os.path.exists(DOCS_GERAIS_DIR):
+    os.makedirs(DOCS_GERAIS_DIR)
+
+# --- ESTADO DA SESSÃO PARA O VISUALIZADOR ---
 if 'pdf_ativo' not in st.session_state:
     st.session_state.pdf_ativo = None
 if 'nome_ativo' not in st.session_state:
     st.session_state.nome_ativo = None
 
-# --- ESTRUTURA DE ABAS ---
+# --- ESTRUTURA DE ABAS (IDÊNTICA À ANTERIOR) ---
 tab_gerador, tab_documentos, tab_livros = st.tabs([
     "📝 GERADOR DE PLANOS", 
     "📂 CENTRAL DE DOCUMENTOS", 
     "📚 LIVROS POR CLASSE"
 ])
 
-# --- JANELA 1: GERADOR (Resumo do seu código anterior) ---
+# --- JANELA 1: GERADOR ---
 with tab_gerador:
     st.header("📝 Criar Novo Plano de Aula")
     st.info("Configure os detalhes na barra lateral.")
 
-# --- JANELA 2: CENTRAL DE DOCUMENTOS (Upload) ---
+# --- JANELA 2: CENTRAL DE DOCUMENTOS (Upload Permanente) ---
 with tab_documentos:
     st.header("📂 Área de Upload")
     
@@ -47,34 +58,40 @@ with tab_documentos:
         tipo = st.radio("Destino:", ["Livro Escolar", "Documento Geral"])
         
         if tipo == "Livro Escolar":
-            c_alvo = st.selectbox("Classe:", list(st.session_state.biblioteca.keys()))
+            c_alvo = st.selectbox("Classe:", CLASSES)
             u_file = st.file_uploader("Carregar PDF do Livro", type="pdf", key="up_livro")
             if u_file and st.button("Salvar na Biblioteca"):
-                # .read() aqui funciona bem para salvar no state
-                st.session_state.biblioteca[c_alvo].append({
-                    "nome": u_file.name, 
-                    "dados": u_file.getvalue()
-                })
-                st.success(f"Livro '{u_file.name}' salvo com sucesso!")
+                # Salva o arquivo fisicamente na pasta da classe
+                caminho = os.path.join(BASE_DIR, c_alvo, u_file.name)
+                with open(caminho, "wb") as f:
+                    f.write(u_file.getbuffer())
+                st.success(f"Livro '{u_file.name}' guardado permanentemente!")
         
         else:
             u_doc = st.file_uploader("Carregar PDF Geral", type="pdf", key="up_doc")
             if u_doc and st.button("Salvar Documento Geral"):
-                st.session_state.docs_gerais.append({
-                    "nome": u_doc.name, 
-                    "dados": u_doc.getvalue()
-                })
-                st.success("Documento geral salvo!")
+                # Salva o arquivo fisicamente na pasta Geral
+                caminho = os.path.join(DOCS_GERAIS_DIR, u_doc.name)
+                with open(caminho, "wb") as f:
+                    f.write(u_doc.getbuffer())
+                st.success("Documento geral guardado!")
 
     with col_u2:
-        st.subheader("Visualizar Documentos Gerais")
-        if st.session_state.docs_gerais:
-            for i, doc in enumerate(st.session_state.docs_gerais):
-                if st.button(f"👁️ Abrir {doc['nome']}", key=f"v_doc_{i}"):
-                    st.session_state.pdf_ativo = doc['dados']
-                    st.session_state.nome_ativo = doc['nome']
+        st.subheader("Documentos Gerais Guardados")
+        arquivos_gerais = os.listdir(DOCS_GERAIS_DIR)
+        if arquivos_gerais:
+            for arq in arquivos_gerais:
+                col_btn, col_del = st.columns([3, 1])
+                if col_btn.button(f"👁️ Abrir {arq}", key=f"v_doc_{arq}"):
+                    with open(os.path.join(DOCS_GERAIS_DIR, arq), "rb") as f:
+                        st.session_state.pdf_ativo = f.read()
+                        st.session_state.nome_ativo = arq
+                # Opção para você como gestor apagar
+                if col_del.button("🗑️", key=f"del_doc_{arq}"):
+                    os.remove(os.path.join(DOCS_GERAIS_DIR, arq))
+                    st.rerun()
         else:
-            st.write("Nenhum documento carregado.")
+            st.write("Nenhum documento na base de dados.")
 
 # --- JANELA 3: LIVROS (Organização por Classe) ---
 with tab_livros:
@@ -84,14 +101,21 @@ with tab_livros:
     
     with col_lista:
         st.subheader("Classes")
-        for classe, livros in st.session_state.biblioteca.items():
-            with st.expander(f"📁 {classe} ({len(livros)})"):
-                if not livros:
+        for classe in CLASSES:
+            with st.expander(f"📁 {classe}"):
+                arquivos_classe = os.listdir(os.path.join(BASE_DIR, classe))
+                if not arquivos_classe:
                     st.caption("Sem livros nesta pasta.")
-                for j, livro in enumerate(livros):
-                    if st.button(f"📖 {livro['nome']}", key=f"liv_{classe}_{j}"):
-                        st.session_state.pdf_ativo = livro['dados']
-                        st.session_state.nome_ativo = livro['nome']
+                for arq in arquivos_classe:
+                    c_btn, c_del = st.columns([4, 1])
+                    if c_btn.button(f"📖 {arq}", key=f"liv_{classe}_{arq}"):
+                        with open(os.path.join(BASE_DIR, classe, arq), "rb") as f:
+                            st.session_state.pdf_ativo = f.read()
+                            st.session_state.nome_ativo = arq
+                    # Botão para apagar (Gestor)
+                    if c_del.button("🗑️", key=f"del_{classe}_{arq}"):
+                        os.remove(os.path.join(BASE_DIR, classe, arq))
+                        st.rerun()
     
     with col_visor:
         st.subheader("🖥️ Leitor Online")
@@ -101,16 +125,14 @@ with tab_livros:
                 st.session_state.pdf_ativo = None
                 st.rerun()
             
-            # --- O PULO DO GATO: USANDO O COMPONENTE DE VISUALIZAÇÃO ---
-            # Este componente renderiza o PDF como imagens, o Chrome não bloqueia!
             pdf_viewer(input=st.session_state.pdf_ativo, width=700)
         else:
-            st.info("Selecione um material para visualizar o conteúdo aqui.")
+            st.info("Selecione um material à esquerda.")
 
 # --- BARRA LATERAL ---
 with st.sidebar:
     st.title("⚙️ Painel de Controle")
-    # Coloque aqui as seleções de Escola, Professor, Disciplina, etc.
+    # Coloque aqui o resto das suas seleções...
 
 # ---------------- OPENAI CLIENT ----------------
 api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
@@ -807,6 +829,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

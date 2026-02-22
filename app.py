@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit_pdf_viewer import pdf_viewer # Biblioteca oficial para evitar bloqueios
 import base64
 from openai import OpenAI
 from docx import Document
@@ -12,24 +13,7 @@ st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
 st.title("🇦🇴 SISTEMA PROFISSIONAL DE ELABORAÇÃO DE PLANO DE AULA")
 st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 
-# --- ESTILO CSS PARA MELHORAR A INTERFACE ---
-st.markdown("""
-    <style>
-    .stTabs [data-baseweb="tab-list"] { gap: 24px; }
-    .stTabs [data-baseweb="tab"] { height: 50px; white-space: pre-wrap; background-color: #f0f2f6; border-radius: 5px; padding: 10px; }
-    .stTabs [aria-selected="true"] { background-color: #007bff; color: white; }
-    </style>
-    """, unsafe_allow_html=True)
-
-# --- FUNÇÃO DE RENDERIZAÇÃO DE PDF ---
-def visualizar_pdf(dados_binarios):
-    """Renderiza o PDF em um iframe Base64"""
-    base64_pdf = base64.b64encode(dados_binarios).decode('utf-8')
-    # O toolbar=0 tenta esconder as opções de download do navegador
-    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}#toolbar=0" width="100%" height="1000px" type="application/pdf"></iframe>'
-    st.markdown(pdf_display, unsafe_allow_html=True)
-
-# --- INICIALIZAÇÃO DO BANCO DE DADOS TEMPORÁRIO ---
+# --- INICIALIZAÇÃO DO ESTADO ---
 if 'biblioteca' not in st.session_state:
     classes = ["Iniciação", "1ª Classe", "2ª Classe", "3ª Classe", "4ª Classe", "5ª Classe", "6ª Classe"]
     st.session_state.biblioteca = {c: [] for c in classes}
@@ -37,25 +21,26 @@ if 'biblioteca' not in st.session_state:
 
 if 'pdf_ativo' not in st.session_state:
     st.session_state.pdf_ativo = None
+if 'nome_ativo' not in st.session_state:
+    st.session_state.nome_ativo = None
 
-# --- ESTRUTURA DE ABAS (JANELAS) ---
+# --- ESTRUTURA DE ABAS ---
 tab_gerador, tab_documentos, tab_livros = st.tabs([
     "📝 GERADOR DE PLANOS", 
     "📂 CENTRAL DE DOCUMENTOS", 
     "📚 LIVROS POR CLASSE"
 ])
 
-# --- JANELA 1: GERADOR DE PLANOS ---
+# --- JANELA 1: GERADOR (Resumo do seu código anterior) ---
 with tab_gerador:
     st.header("📝 Criar Novo Plano de Aula")
-    st.info("Utilize a barra lateral para configurar os detalhes da aula.")
-    # (O código do seu gerador OpenAI entra aqui)
+    st.info("Configure os detalhes na barra lateral.")
 
-# --- JANELA 2: CENTRAL DE DOCUMENTOS (Upload e Gestão) ---
+# --- JANELA 2: CENTRAL DE DOCUMENTOS (Upload) ---
 with tab_documentos:
     st.header("📂 Área de Upload")
     
-    col_u1, col_u2 = st.columns(2)
+    col_u1, col_u2 = st.columns([1, 1])
     
     with col_u1:
         st.subheader("Submeter Novo Arquivo")
@@ -65,23 +50,31 @@ with tab_documentos:
             c_alvo = st.selectbox("Classe:", list(st.session_state.biblioteca.keys()))
             u_file = st.file_uploader("Carregar PDF do Livro", type="pdf", key="up_livro")
             if u_file and st.button("Salvar na Biblioteca"):
-                # IMPORTANTE: .getvalue() garante que pegamos os dados reais do arquivo
-                st.session_state.biblioteca[c_alvo].append({"nome": u_file.name, "dados": u_file.getvalue()})
-                st.success(f"Livro '{u_file.name}' salvo!")
+                # .read() aqui funciona bem para salvar no state
+                st.session_state.biblioteca[c_alvo].append({
+                    "nome": u_file.name, 
+                    "dados": u_file.getvalue()
+                })
+                st.success(f"Livro '{u_file.name}' salvo com sucesso!")
         
         else:
             u_doc = st.file_uploader("Carregar PDF Geral", type="pdf", key="up_doc")
-            if u_doc and st.button("Salvar Documento"):
-                st.session_state.docs_gerais.append({"nome": u_doc.name, "dados": u_doc.getvalue()})
-                st.success("Documento salvo!")
+            if u_doc and st.button("Salvar Documento Geral"):
+                st.session_state.docs_gerais.append({
+                    "nome": u_doc.name, 
+                    "dados": u_doc.getvalue()
+                })
+                st.success("Documento geral salvo!")
 
     with col_u2:
         st.subheader("Visualizar Documentos Gerais")
-        if not st.session_state.docs_gerais:
-            st.write("Nenhum documento geral carregado.")
-        for i, doc in enumerate(st.session_state.docs_gerais):
-            if st.button(f"👁️ Visualizar {doc['nome']}", key=f"v_doc_{i}"):
-                st.session_state.pdf_ativo = doc['dados']
+        if st.session_state.docs_gerais:
+            for i, doc in enumerate(st.session_state.docs_gerais):
+                if st.button(f"👁️ Abrir {doc['nome']}", key=f"v_doc_{i}"):
+                    st.session_state.pdf_ativo = doc['dados']
+                    st.session_state.nome_ativo = doc['nome']
+        else:
+            st.write("Nenhum documento carregado.")
 
 # --- JANELA 3: LIVROS (Organização por Classe) ---
 with tab_livros:
@@ -92,31 +85,32 @@ with tab_livros:
     with col_lista:
         st.subheader("Classes")
         for classe, livros in st.session_state.biblioteca.items():
-            with st.expander(f"📁 {classe}"):
+            with st.expander(f"📁 {classe} ({len(livros)})"):
                 if not livros:
-                    st.caption("Pasta vazia")
+                    st.caption("Sem livros nesta pasta.")
                 for j, livro in enumerate(livros):
-                    # Botão que ativa a visualização
                     if st.button(f"📖 {livro['nome']}", key=f"liv_{classe}_{j}"):
                         st.session_state.pdf_ativo = livro['dados']
+                        st.session_state.nome_ativo = livro['nome']
     
     with col_visor:
         st.subheader("🖥️ Leitor Online")
         if st.session_state.pdf_ativo is not None:
+            st.write(f"**Lendo:** {st.session_state.nome_ativo}")
             if st.button("❌ Fechar Leitor"):
                 st.session_state.pdf_ativo = None
                 st.rerun()
-            else:
-                visualizar_pdf(st.session_state.pdf_ativo)
+            
+            # --- O PULO DO GATO: USANDO O COMPONENTE DE VISUALIZAÇÃO ---
+            # Este componente renderiza o PDF como imagens, o Chrome não bloqueia!
+            pdf_viewer(input=st.session_state.pdf_ativo, width=700)
         else:
-            st.info("Selecione um livro à esquerda para ler aqui.")
+            st.info("Selecione um material para visualizar o conteúdo aqui.")
 
 # --- BARRA LATERAL ---
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/a/af/Flag_of_Angola.svg", width=100)
-    st.title("Configurações do Plano")
-    # Seus campos de seleção (Classe, Disciplina, etc)
-        
+    st.title("⚙️ Painel de Controle")
+    # Coloque aqui as seleções de Escola, Professor, Disciplina, etc.
 
 # ---------------- OPENAI CLIENT ----------------
 api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
@@ -813,6 +807,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

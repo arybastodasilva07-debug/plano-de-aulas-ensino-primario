@@ -607,7 +607,7 @@ with st.sidebar:
     tema = st.selectbox("Tema", temas)
     subtemas = curriculo[classe][disciplina][tema]
     subtema = st.selectbox("Subtema", subtemas)
-    sumarios = subtemas_dict[subtema]
+    sumarios = curriculo[classe][disciplina][tema][subtema]
     sumario = st.selectbox("Assunto/Sumário", lista_sumarios)
     aula_numero = st.number_input("Aula nº", min_value=1, step=1)
     tempo = "45 minutos"
@@ -698,6 +698,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

@@ -11,57 +11,65 @@ st.title("🇦🇴 SISTEMA PROFISSIONAL DE ELABORAÇÃO DE PLANO DE AULA")
 st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 
 # --- JANELAS PRINCIPAIS (ABAS) ---
-# Criamos as duas janelas que você solicitou
-tab_gerador, tab_documentos = st.tabs(["📝 Gerador de Planos", "📂 Central de Documentos"])
+# Adicionamos a nova aba "📚 Livros"
+tab_gerador, tab_documentos, tab_livros = st.tabs([
+    "📝 Gerador de Planos", 
+    "📂 Central de Documentos", 
+    "📚 Livros"
+])
 
 # --- JANELA 1: GERADOR DE PLANOS ---
 with tab_gerador:
-    st.header("Gerador Automático de Planos de Aula")
-    st.info("Preencha os dados na barra lateral e clique em gerar.")
-    
-    # Aqui vai o código que já criamos para o formulário e a IA
-    # ... (Seu código de inputs e botão de gerar)
+    st.header("Gerador de Planos de Aula")
+    # (Seu código do gerador aqui)
 
-# --- JANELA 2: CENTRAL DE DOCUMENTOS (A sua nova aba) ---
+# --- JANELA 2: CENTRAL DE DOCUMENTOS ---
 with tab_documentos:
-    st.header("📂 Gestão de Ficheiros e Manuais")
-    st.write("Carregue aqui os seus Manuais do INIDE, Dosificações ou modelos em Word.")
-    
-    # 1. Área de Upload
-    with st.container():
-        st.markdown("### Submeter Novo Ficheiro")
-        arquivos = st.file_uploader(
-            "Selecione manuais (PDF) ou modelos (Word)", 
-            type=['pdf', 'docx', 'doc'], 
-            accept_multiple_files=True,
-            key="central_upload"
-        )
+    st.header("📂 Gestão de Ficheiros")
+    # (Seu código de upload aqui)
 
-    st.divider()
+# --- JANELA 3: LIVROS (Organizados por Classes) ---
+with tab_livros:
+    st.header("📚 Biblioteca Escolar (Manuais INIDE)")
+    st.write("Selecione a classe para aceder aos manuais disponíveis.")
 
-    # 2. Área de Visualização e Download
-    st.markdown("### 📄 Documentos Disponíveis na Sessão")
-    if arquivos:
-        # Criamos uma grelha para mostrar os ficheiros lado a lado
-        cols = st.columns(3)
-        for i, arquivo in enumerate(arquivos):
-            with cols[i % 3]:
-                # Estilização simples para cada ficheiro
-                st.info(f"**Nome:** {arquivo.name}")
-                st.download_button(
-                    label=f"📥 Baixar {arquivo.name.split('.')[-1].upper()}",
-                    data=arquivo,
-                    file_name=arquivo.name,
-                    key=f"btn_down_{i}"
-                )
-    else:
-        st.warning("Nenhum documento carregado ainda. Arraste os seus ficheiros para a caixa acima.")
+    # Organização por Expansores de Classe
+    with st.expander("📂 Iniciação"):
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("Manual de Língua Portuguesa")
+            st.button("Visualizar PDF", key="ver_ini_lp")
+        with col2:
+            st.write("Manual de Estudo do Meio")
+            st.button("Visualizar PDF", key="ver_ini_em")
 
-# --- BARRA LATERAL (SIDEBAR) ---
+    with st.expander("📂 1ª Classe"):
+        st.info("Lista de manuais para a 1ª Classe...")
+        # Exemplo de como você pode listar
+        st.checkbox("Matemática - 1ª Classe")
+        st.checkbox("Língua Portuguesa - 1ª Classe")
+
+    with st.expander("📂 2ª Classe"):
+        st.write("Conteúdo em atualização...")
+
+    with st.expander("📂 3ª Classe"):
+        st.write("Conteúdo em atualização...")
+
+    with st.expander("📂 4ª Classe"):
+        st.write("Conteúdo em atualização...")
+
+    with st.expander("📂 5ª Classe"):
+        st.write("Manual de História - 5ª Classe")
+        st.write("Manual de Geografia - 5ª Classe")
+
+    with st.expander("📂 6ª Classe"):
+        st.write("Manual de História - 6ª Classe")
+        st.write("Manual de Geografia - 6ª Classe")
+        st.button("Baixar Kit Completo 6ª Classe")
+
+# --- BARRA LATERAL ---
 with st.sidebar:
-    st.title("⚙️ Configurações")
-    # Mantenha aqui as seleções de Classe, Disciplina e Tema 
-    # para que elas funcionem de forma global.
+    st.title("⚙️ Painel de Controle")
 
 # ---------------- OPENAI CLIENT ----------------
 api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
@@ -758,6 +766,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

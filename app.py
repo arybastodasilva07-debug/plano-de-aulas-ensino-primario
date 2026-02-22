@@ -601,14 +601,16 @@ with st.sidebar:
 
     st.header("📚 Dados da Aula")
     classe = st.selectbox("Classe", list(curriculo.keys()))
+    
     disciplinas = list(curriculo[classe].keys())
     disciplina = st.selectbox("Disciplina", disciplinas)
+    
     temas = list(curriculo[classe][disciplina].keys())
     tema = st.selectbox("Tema", temas)
-    subtemas = curriculo[classe][disciplina][tema]
-    subtema = st.selectbox("Subtema", subtemas)
-    sumarios = curriculo[classe][disciplina][tema][subtema]
-    sumario = st.selectbox("Assunto/Sumário", lista_sumarios)
+    subtemas_dict = curriculo[classe][disciplina][tema] 
+    subtema = st.selectbox("Subtema", list(subtemas_dict.keys()))
+    lista_sumarios = subtemas_dict[subtema]
+    sumario_selecionado = st.selectbox("Assunto/Sumário", lista_sumarios)
     aula_numero = st.number_input("Aula nº", min_value=1, step=1)
     tempo = "45 minutos"
 
@@ -698,6 +700,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

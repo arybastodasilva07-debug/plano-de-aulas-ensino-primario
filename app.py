@@ -4,78 +4,98 @@ from docx import Document
 from docx.shared import Inches
 import io
 import os
+import base64
 
 # ---------------- CONFIGURAÇÃO ----------------
 st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
 st.title("🇦🇴 SISTEMA PROFISSIONAL DE ELABORAÇÃO DE PLANO DE AULA")
 st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 
-# Função para exibir PDF online sem opção de download simples
-def exibir_pdf(file):
-    base64_pdf = base64.b64encode(file.read()).decode('utf-8')
-    # Oculta a barra de ferramentas do PDF (incluindo o botão de download) com #toolbar=0
-    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}#toolbar=0" width="100%" height="600" type="application/pdf"></iframe>'
-    st.markdown(pdf_display, unsafe_allow_html=True)
+# --- FUNÇÃO DE VISUALIZAÇÃO REFORÇADA ---
+def exibir_pdf(file_content, file_name):
+    try:
+        # Converter o conteúdo para base64
+        base64_pdf = base64.b64encode(file_content).decode('utf-8')
+        
+        # Criar o objeto HTML para visualização
+        # O parâmetro #toolbar=0 e #navpanes=0 tenta ocultar opções de download
+        pdf_display = f'''
+            <div style="border: 1px solid #ccc; border-radius: 5px; overflow: hidden;">
+                <iframe src="data:application/pdf;base64,{base64_pdf}#toolbar=0" 
+                width="100%" height="800px" style="border: none;">
+                </iframe>
+            </div>
+        '''
+        st.markdown(f"### Visualizando: {file_name}")
+        st.markdown(pdf_display, unsafe_allow_html=True)
+    except Exception as e:
+        st.error(f"Erro ao carregar o visualizador: {e}")
 
-# --- JANELAS PRINCIPAIS (ABAS) ---
+# --- INICIALIZAÇÃO DO ESTADO (Para não perder dados) ---
+if 'biblioteca' not in st.session_state:
+    classes = ["Iniciação", "1ª Classe", "2ª Classe", "3ª Classe", "4ª Classe", "5ª Classe", "6ª Classe"]
+    st.session_state.biblioteca = {classe: [] for classe in classes}
+if 'livro_para_leitura' not in st.session_state:
+    st.session_state.livro_para_leitura = None
+
+# --- JANELAS (ABAS) ---
 tab_gerador, tab_documentos, tab_livros = st.tabs([
     "📝 Gerador de Planos", 
     "📂 Central de Documentos", 
     "📚 Livros por Classe"
 ])
 
-# Inicializar dicionário de livros no estado da sessão para não perder ao trocar de aba
-if 'biblioteca' not in st.session_state:
-    st.session_state.biblioteca = {f"{i}ª Classe": [] for i in range(1, 7)}
-    st.session_state.biblioteca["Iniciação"] = []
-
-# --- JANELA 1: GERADOR DE PLANOS ---
-with tab_gerador:
-    st.header("Gerador de Planos de Aula")
-    st.info("Área destinada à criação de planos com IA.")
-
 # --- JANELA 2: CENTRAL DE DOCUMENTOS (Upload) ---
 with tab_documentos:
     st.header("📂 Upload de Materiais")
     
-    tipo_material = st.radio("O que deseja carregar?", ["Documento Geral", "Livro Escolar"])
+    tipo_material = st.radio("Destino do arquivo:", ["Documento Geral", "Livro Escolar"])
     
     if tipo_material == "Livro Escolar":
-        classe_alvo = st.selectbox("Para qual classe é este livro?", list(st.session_state.biblioteca.keys()))
+        classe_alvo = st.selectbox("Selecione a Classe:", list(st.session_state.biblioteca.keys()))
         arquivo_livro = st.file_uploader("Carregar Livro (PDF)", type=['pdf'], key="up_livro")
+        
         if arquivo_livro:
-            if st.button("Guardar na Biblioteca"):
-                st.session_state.biblioteca[classe_alvo].append(arquivo_livro)
-                st.success(f"Livro '{arquivo_livro.name}' adicionado à {classe_alvo}!")
+            if st.button("Confirmar e Guardar na Biblioteca"):
+                # Lemos o conteúdo binário para garantir que ele persiste
+                conteudo = arquivo_livro.read()
+                st.session_state.biblioteca[classe_alvo].append({
+                    "nome": arquivo_livro.name,
+                    "dados": conteudo
+                })
+                st.success(f"O livro '{arquivo_livro.name}' foi guardado na pasta da {classe_alvo}!")
     else:
         arquivo_doc = st.file_uploader("Carregar Documento Geral (PDF)", type=['pdf'], key="up_doc")
         if arquivo_doc:
-            st.subheader(f"Visualizando: {arquivo_doc.name}")
-            exibir_pdf(arquivo_doc)
+            conteudo_doc = arquivo_doc.read()
+            exibir_pdf(conteudo_doc, arquivo_doc.name)
 
-# --- JANELA 3: LIVROS (Visualização por Classes) ---
+# --- JANELA 3: LIVROS (Organização por Classe) ---
 with tab_livros:
     st.header("📚 Biblioteca Digital INIDE")
-    st.write("Selecione um livro para leitura online.")
+    st.info("Clique no livro para abrir o leitor abaixo.")
 
+    # Listagem de Classes
     for classe, livros in st.session_state.biblioteca.items():
-        with st.expander(f"📂 {classe}"):
+        with st.expander(f"📂 {classe} ({len(livros)} livros)"):
             if not livros:
-                st.write("Nenhum livro carregado para esta classe.")
+                st.write("Nenhum livro nesta classe.")
             else:
                 for idx, livro in enumerate(livros):
-                    col1, col2 = st.columns([3, 1])
-                    with col1:
-                        st.write(f"📖 {livro.name}")
-                    with col2:
-                        if st.button("Ler Online", key=f"read_{classe}_{idx}"):
-                            st.session_state.livro_atual = livro
+                    col1, col2 = st.columns([4, 1])
+                    col1.write(f"📖 {livro['nome']}")
+                    # Botão para selecionar o livro
+                    if col2.button("Visualizar", key=f"btn_{classe}_{idx}"):
+                        st.session_state.livro_para_leitura = livro
 
-    # Área de Leitura (Abaixo da lista)
-    if 'livro_atual' in st.session_state:
+    # Espaço do Leitor (Só aparece se um livro for selecionado)
+    if st.session_state.livro_para_leitura:
         st.divider()
-        st.subheader(f"Leitura Online: {st.session_state.livro_atual.name}")
-        exibir_pdf(st.session_state.livro_atual)
+        if st.button("❌ Fechar Leitor"):
+            st.session_state.livro_para_leitura = None
+            st.rerun()
+        else:
+            exibir_pdf(st.session_state.livro_para_leitura['dados'], st.session_state.livro_para_leitura['nome'])
 
 # --- BARRA LATERAL ---
 with st.sidebar:
@@ -776,6 +796,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

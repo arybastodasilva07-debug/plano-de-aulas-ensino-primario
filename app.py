@@ -132,3 +132,34 @@ else:
 
             if st.button("Guardar Documento"):
                 if uploaded_file:
+
+                    pasta = "documentos_oficiais"
+                    if not os.path.exists(pasta):
+                        os.makedirs(pasta)
+
+                    caminho = os.path.join(pasta, uploaded_file.name)
+
+                    with open(caminho, "wb") as f:
+                        f.write(uploaded_file.getbuffer())
+
+                    c.execute("""
+                    INSERT INTO documentos (titulo, classe, disciplina, tipo, nome_arquivo)
+                    VALUES (?, ?, ?, ?, ?)
+                    """, (titulo, classe, disciplina, tipo_doc, uploaded_file.name))
+
+                    conn.commit()
+                    st.success("Documento adicionado!")
+
+        # TODOS podem visualizar
+        st.subheader("Documentos Disponíveis")
+
+        c.execute("SELECT * FROM documentos")
+        docs = c.fetchall()
+
+        for doc in docs:
+            st.divider()
+            st.write(f"📄 {doc[1]}")
+            st.write(f"{doc[2]} | {doc[3]} | {doc[4]}")
+
+            with open(f"documentos_oficiais/{doc[5]}", "rb") as f:
+                st.download_button("📥 Baixar", f, file_name=doc[5])

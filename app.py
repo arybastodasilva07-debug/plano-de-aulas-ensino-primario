@@ -619,6 +619,39 @@ with st.sidebar:
 
     gerar = st.button("🧠 Gerar Plano de Aula")
 
+# ---------------- CENTRAL DE DOCUMENTOS ----------------
+st.divider()
+st.header("📂 Central de Recursos (PDF/Word)")
+
+# Criar duas colunas: uma para carregar e outra para ver o que foi carregado
+col_up, col_list = st.columns([1, 1])
+
+with col_up:
+    st.subheader("Submeter Ficheiro")
+    ficheiros_carregados = st.file_uploader(
+        "Adicione manuais, dosificações ou modelos aqui", 
+        type=["pdf", "docx", "doc"], 
+        accept_multiple_files=True
+    )
+    
+    if ficheiros_carregados:
+        for f in ficheiros_carregados:
+            st.success(f"✅ {f.name} carregado com sucesso!")
+
+with col_list:
+    st.subheader("Documentos Disponíveis")
+    if ficheiros_carregados:
+        for f in ficheiros_carregados:
+            # Botão para o professor baixar o arquivo que ele acabou de subir
+            st.download_button(
+                label=f"📥 Baixar {f.name}",
+                data=f,
+                file_name=f.name,
+                mime="application/octet-stream"
+            )
+    else:
+        st.info("Nenhum ficheiro guardado nesta sessão.")
+
 # ---------------- FUNÇÃO PARA GERAR PLANO ----------------
 def gerar_plano():
     prompt = f"""
@@ -703,6 +736,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

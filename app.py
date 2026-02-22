@@ -4,6 +4,7 @@ from docx import Document
 from docx.shared import Inches
 import io
 import os
+import base64
 
 # ---------------- CONFIGURAÇÃO ----------------
 st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
@@ -74,7 +75,7 @@ with tab_livros:
                         st.write(f"📖 {livro.name}")
                     with col2:
                         if st.button("Ler Online", key=f"read_{classe}_{idx}"):
-                            st.session_state.livro_atual = livro
+                            exibir_pdf ("caminho/do/seu/arquivo.pdf") = livro
 
     # Área de Leitura (Abaixo da lista)
     if 'livro_atual' in st.session_state:
@@ -781,6 +782,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

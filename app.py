@@ -127,8 +127,8 @@ else:
 # ABA ADMIN (PROTEGIDA)
 # =========================
 
-if is_gerente
-    with tab_gerent:
+if is_gerente:
+    with tab_gerente:
 
         st.title("⚙ Gestão do Portal")
 
@@ -995,6 +995,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

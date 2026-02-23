@@ -94,16 +94,15 @@ is_gerente = (st.session_state.user_email == st.secrets["ADMIN_EMAIL"].strip())
 
 # Configurar pastas da biblioteca
 BASE_DIR = "biblioteca_permanente"
-CLASSES = ["Iniciação", "1ª Classe", "2ª Classe", "3ª Classe", "4ª Classe", "5ª Classe", "6ª Classe", "Gerais"]
+CLASSES = ["Iniciação", "1ª Classe", "2ª Classe", "3ª Classe", "4ª Classe", "5ª Classe", "6ª Classe", " Documentos Gerais"]
 for c in CLASSES:
     path = os.path.join(BASE_DIR, c)
     if not os.path.exists(path): os.makedirs(path)
 
 # ---------------- 5. INTERFACE PRINCIPAL ----------------
-st.title("🇦🇴 Painel Pedagógico Profissional")
 
 with st.sidebar:
-    st.header("⚙️ Opções")
+    st.header("⚙️ Menu")
     st.write(f"Usuário: **{st.session_state.user_email}**")
     if is_gerente: st.success("Modo Gerente Ativo")
     if st.button("Sair do Sistema"):
@@ -111,7 +110,6 @@ with st.sidebar:
         st.rerun()
 
 # Abas Dinâmicas
-titulos_abas = ["📝 GERADOR", "📚 BIBLIOTECA"]
 if is_gerente: titulos_abas.append("📂 GERENCIAR ARQUIVOS")
 abas = st.tabs(titulos_abas)
 
@@ -138,6 +136,18 @@ if is_gerente:
                 st.rerun()
 
 # ======== NÃO MEXER ================= # NÃO MEXE # =========== NÃO MEXER ==============  CIMA
+
+# --- SISTEMA DE ARMAZENAMENTO PERMANENTE ---
+# Criar a pasta base se não existir
+BASE_DIR = "biblioteca_permanente"
+if not os.path.exists(BASE_DIR):
+    os.makedirs(BASE_DIR)
+
+CLASSES = ["Iniciação", "1ª Classe", "2ª Classe", "3ª Classe", "4ª Classe", "5ª Classe", "6ª Classe"]
+for c in CLASSES:
+    c_path = os.path.join(BASE_DIR, c)
+    if not os.path.exists(c_path):
+        os.makedirs(c_path)
 
 
 
@@ -1077,6 +1087,7 @@ if is_admin:
                     f.write(ficheiro.getbuffer())
 
                 st.success("Documento guardado com sucesso.")
+
 
 
 

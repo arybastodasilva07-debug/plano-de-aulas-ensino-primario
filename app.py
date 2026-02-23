@@ -99,6 +99,47 @@ for c in CLASSES:
     path = os.path.join(BASE_DIR, c)
     if not os.path.exists(path): os.makedirs(path)
 
+# ---------------- 5. INTERFACE PRINCIPAL ----------------
+st.title("🇦🇴 Painel Pedagógico Profissional")
+
+with st.sidebar:
+    st.header("⚙️ Opções")
+    st.write(f"Usuário: **{st.session_state.user_email}**")
+    if is_gerente: st.success("Modo Gerente Ativo")
+    if st.button("Sair do Sistema"):
+        st.session_state.autenticado = False
+        st.rerun()
+
+# Abas Dinâmicas
+titulos_abas = ["📝 GERADOR", "📚 BIBLIOTECA"]
+if is_gerente: titulos_abas.append("📂 GERENCIAR ARQUIVOS")
+abas = st.tabs(titulos_abas)
+
+
+# --- ABA: GERENCIAR (SÓ PARA ADMIN) ---
+if is_gerente:
+    with abas[2]:
+        st.header("📂 Gestão de Ficheiros")
+        col_up, col_del = st.columns(2)
+        with col_up:
+            target = st.selectbox("Pasta Destino:", CLASSES)
+            up_f = st.file_uploader("Upload PDF", type="pdf")
+            if up_f and st.button("Confirmar Upload"):
+                with open(os.path.join(BASE_DIR, target, up_f.name), "wb") as f:
+                    f.write(up_f.getbuffer())
+                st.success("Arquivo salvo!")
+        with col_del:
+            st.subheader("🗑️ Apagar Arquivos")
+            target_del = st.selectbox("Pasta para Limpar:", CLASSES)
+            f_list = os.listdir(os.path.join(BASE_DIR, target_del))
+            f_to_del = st.selectbox("Ficheiro:", f_list) if f_list else None
+            if f_to_del and st.button("Eliminar Permanentemente"):
+                os.remove(os.path.join(BASE_DIR, target_del, f_to_del))
+                st.rerun()
+
+# ======== NÃO MEXER ================= # NÃO MEXE # =========== NÃO MEXER ==============  CIMA
+
+
 # ========================= # ABAS # =========================
 
 if is_admin:
@@ -1195,6 +1236,7 @@ if is_admin:
                     f.write(ficheiro.getbuffer())
 
                 st.success("Documento guardado com sucesso.")
+
 
 
 

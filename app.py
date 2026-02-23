@@ -3,7 +3,6 @@ from streamlit_pdf_viewer import pdf_viewer
 import os
 from openai import OpenAI
 from docx import Document
-from docx.shared import Inches
 import io
 import smtplib
 from email.mime.text import MIMEText
@@ -990,6 +989,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

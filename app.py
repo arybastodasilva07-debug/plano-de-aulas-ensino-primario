@@ -24,57 +24,6 @@ footer {visibility:hidden;}
 def gerar_codigo():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
-# ---------------- LOGIN ----------------
-
-st.sidebar.title("🔐 Acesso ao Sistema")
-
-perfil = st.sidebar.selectbox("Perfil", ["Professor", "Administrador"])
-
-is_admin = False
-dados_professor = {}
-
-if perfil == "Administrador":
-    senha = st.sidebar.text_input("Senha Admin", type="password")
-    if senha == "admin123":
-        is_admin = True
-        st.sidebar.success("Acesso concedido")
-    elif senha:
-        st.sidebar.error("Senha incorreta")
-
-if perfil == "Professor":
-    st.sidebar.subheader("👤 Identificação do Professor")
-
-    nome_prof = st.sidebar.text_input("Nome Completo")
-    escola = st.sidebar.text_input("Escola")
-    municipio = st.sidebar.text_input("Município")
-    provincia = st.sidebar.text_input("Província")
-
-    dados_professor = {
-        "nome": nome_prof,
-        "escola": escola,
-        "municipio": municipio,
-        "provincia": provincia
-    }
-
-    st.sidebar.markdown("---")
-    st.sidebar.info("Perfil Professor activo")
-
-# ---------------- DEFINIÇÃO DE PERMISSÕES ----------------
-is_admin = False
-try:
-    is_admin = (st.session_state.user_email == st.secrets["ADMIN_EMAIL"].strip())
-except:
-    pass
-
-# ---------------- ESTRUTURA DE PASTAS ----------------
-BASE_DIR = "biblioteca_permanente"
-CLASSES = ["Iniciação", "1ª Classe", "2ª Classe", "3ª Classe",
-           "4ª Classe", "5ª Classe", "6ª Classe", "Gerais"]
-
-for c in CLASSES:
-    caminho = os.path.join(BASE_DIR, c)
-    if not os.path.exists(caminho):
-        os.makedirs(caminho)
 
 # ---------------- MENU LATERAL ----------------
 st.sidebar.title("MENU")
@@ -867,6 +816,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

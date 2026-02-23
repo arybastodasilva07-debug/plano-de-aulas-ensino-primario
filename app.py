@@ -38,6 +38,36 @@ if not st.session_state.autenticado:
             else:
                 st.error("Código incorreto.")
     st.stop()
+
+# --- LOGICA DE LOGIN COM CONTROLO POR E-MAIL ---
+if not st.session_state.get("autenticado"):
+    st.title("👨‍🏫 Portal do Professor")
+    
+    tab1, tab2 = st.tabs(["Entrar", "Solicitar Acesso"])
+    
+    with tab1:
+        email_input = st.text_input("Introduza o seu e-mail").strip().lower()
+        senha_input = st.text_input("Introduza a sua chave única", type="password").strip()
+        
+        if st.button("Validar Acesso"):
+            # 1. Verificar se o e-mail existe nos Secrets
+            if email_input in st.secrets["PASSWORDS"]:
+                # 2. Verificar se a senha está correta para este e-mail
+                senha_correta = st.secrets["PASSWORDS"][email_input]
+                
+                if senha_input == senha_correta:
+                    st.session_state.autenticado = True
+                    st.session_state.user_email = email_input
+                    st.success("Acesso confirmado!")
+                    st.rerun()
+                else:
+                    st.error("Chave de acesso incorreta para este e-mail.")
+            else:
+                st.error("E-mail não autorizado ou não encontrado.")
+
+    with tab2:
+        # (Aqui fica o código de solicitar senha que fizemos antes)
+        st.info("Envie o pedido para receber a sua chave de acesso.")
     
 # --- SISTEMA DE ARMAZENAMENTO PERMANENTE ---
 # Criar a pasta base se não existir
@@ -856,6 +886,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

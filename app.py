@@ -2,271 +2,173 @@ import streamlit as st
 from streamlit_pdf_viewer import pdf_viewer
 import os
 from openai import OpenAI
-from docx import Document
-import io
 import random
 import string
 import urllib.parse
 
-# ---------------- CONFIGURAÇÃO ----------------
-st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
+# ---------------- CONFIGURAÇÃO INICIAL ----------------
+st.set_page_config(page_title="Portal Pedagógico Angola", layout="wide")
+
 st.title("🇦🇴 SISTEMA PROFISSIONAL DE ELABORAÇÃO DE PLANO DE AULA")
 st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 
-# CSS para esconder ferramentas de desenvolvedor e limpar o design
+# Esconder elementos técnicos
 st.markdown("""
-    <style>
-    .stAppDeployButton {display:none;}
-    footer {visibility: hidden;}
-    [data-testid="stHeader"] {background: rgba(0,0,0,0);}
-    </style>
-    """, unsafe_allow_html=True)
+<style>
+.stAppDeployButton {display:none;}
+footer {visibility:hidden;}
+</style>
+""", unsafe_allow_html=True)
 
-# ---------------- 2. FUNÇÕES DE APOIO ----------------
+# ---------------- FUNÇÕES ----------------
 def gerar_codigo():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
-# ---------------- 3. CONTROLO DE SESSÃO E LOGIN ----------------
+# ---------------- LOGIN ----------------
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
 
 if not st.session_state.autenticado:
-    st.title("🇦🇴 Portal Pedagógico - Angola")
-    tab_login, tab_solicitar = st.tabs(["🔐 Entrar", "🔑 Solicitar Acesso"])
+    st.title("🔐 Portal Pedagógico - Angola")
+    tab_login, tab_solicitar = st.tabs(["Entrar", "Solicitar Acesso"])
 
     with tab_login:
-        email_in = st.text_input("E-mail Google").strip().lower()
+        email_in = st.text_input("E-mail").strip().lower()
         pass_in = st.text_input("Chave de Acesso", type="password").strip()
+
         if st.button("Validar Entrada"):
             try:
-                # Verificação individual por e-mail nos Secrets
                 if email_in in st.secrets["PASSWORDS"] and pass_in == str(st.secrets["PASSWORDS"][email_in]):
                     st.session_state.autenticado = True
                     st.session_state.user_email = email_in
                     st.rerun()
                 else:
-                    st.error("Dados incorretos. Verifique o e-mail e a chave.")
+                    st.error("Dados incorretos.")
             except:
-                st.error("Erro crítico: Base de dados [PASSWORDS] não configurada nos Secrets.")
+                st.error("Base de utilizadores não configurada nos Secrets.")
 
     with tab_solicitar:
-        st.subheader("Pedir Chave de Acesso")
-        email_novo = st.text_input("Seu e-mail de contacto")
-        if email_novo:
-            if "@" in email_novo:
-                cod_sugerido = gerar_codigo()
-                texto_whatsapp = f"Olá Ary Basto! Sou o professor(a) {email_novo}. Gostaria de adquirir acesso ao Portal. Código: {cod_sugerido}"
-                texto_url = urllib.parse.quote(texto_whatsapp)
-                
-                # --- INSIRA SEU NÚMERO AQUI (com 244) ---
-                seu_numero = "244923000000" 
-                link_wa = f"https://wa.me/{seu_numero}?text={texto_url}"
-                
-                st.info(f"O seu código de referência é: **{cod_sugerido}**")
-                st.markdown(f'<a href="{link_wa}" target="_blank"><button style="background-color: #25D366; color: white; border: none; padding: 12px; border-radius: 5px; width: 100%; cursor: pointer;">📱 Enviar Pedido via WhatsApp</button></a>', unsafe_allow_html=True)
-            else:
-                st.warning("Insira um e-mail válido.")
+        email_novo = st.text_input("Seu e-mail")
+        if email_novo and "@" in email_novo:
+            codigo = gerar_codigo()
+            msg = f"Olá! Sou o professor(a) {email_novo}. Código: {codigo}"
+            link = f"https://wa.me/244923000000?text={urllib.parse.quote(msg)}"
+            st.info(f"Código de referência: {codigo}")
+            st.markdown(f"[📱 Solicitar via WhatsApp]({link})")
+
     st.stop()
 
-# ---------------- 4. DEFINIÇÃO DE PERMISSÕES (ADMIN vs USUÁRIO) ----------------
-# Esta variável define quem manda no app
-is_gerente = (st.session_state.user_email == st.secrets["ADMIN_EMAIL"].strip())
+# ---------------- DEFINIÇÃO DE PERMISSÕES ----------------
+is_admin = False
+try:
+    is_admin = (st.session_state.user_email == st.secrets["ADMIN_EMAIL"].strip())
+except:
+    pass
 
-# Configuração das pastas
+# ---------------- ESTRUTURA DE PASTAS ----------------
 BASE_DIR = "biblioteca_permanente"
-CLASSES = ["Iniciação", "1ª Classe", "2ª Classe", "3ª Classe", "4ª Classe", "5ª Classe", "6ª Classe", "Gerais"]
-for c in CLASSES:
-    p = os.path.join(BASE_DIR, c)
-    if not os.path.exists(p): os.makedirs(p)
+CLASSES = ["Iniciação", "1ª Classe", "2ª Classe", "3ª Classe",
+           "4ª Classe", "5ª Classe", "6ª Classe", "Gerais"]
 
-# ---------------- 5. INTERFACE PRINCIPAL ----------------
-st.sidebar.title("🇦🇴 MENU")
-st.sidebar.write(f"Utilizador: **{st.session_state.user_email}**")
-if is_gerente:
-    st.sidebar.success("✅ ACESSO: ADMINISTRADOR")
+for c in CLASSES:
+    caminho = os.path.join(BASE_DIR, c)
+    if not os.path.exists(caminho):
+        os.makedirs(caminho)
+
+# ---------------- MENU LATERAL ----------------
+st.sidebar.title("MENU")
+st.sidebar.write(f"Utilizador: {st.session_state.user_email}")
+
+if is_admin:
+    st.sidebar.success("ADMINISTRADOR")
 else:
-    st.sidebar.info("👤 ACESSO: PROFESSOR")
+    st.sidebar.info("PROFESSOR")
 
 if st.sidebar.button("Terminar Sessão"):
     st.session_state.autenticado = False
     st.rerun()
 
-# --- CRIAÇÃO DAS ABAS (DINÂMICA) ---
-titulos_abas = ["📝 GERADOR", "📚 BIBLIOTECA"]
-if is_gerente:
-    titulos_abas.append("📂 GERIR PORTAL") # Só o Ary vê esta aba
+# ---------------- ABAS ----------------
+tab_gerador, tab_biblioteca, tab_admin = st.tabs(
+    ["Gerador de Planos", "Biblioteca Digital", "Gestão do Portal"]
+)
 
-abas = st.tabs(titulos_abas)
-
-# --- ABA 1: GERADOR ---
-with abas[0]:
-    st.header("📝 Criar Novo Plano de Aula")
-    col1, col2 = st.columns(2)
-    with col1:
-        disc = st.text_input("Disciplina")
-        tema = st.text_input("Tema")
-        cl = st.selectbox("Classe", CLASSES[:-1])
-        if st.button("✨ Gerar com IA"):
-            client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-            prompt = f"Plano de aula angolano (INIDE). Disciplina: {disc}, Tema: {tema}, Classe: {cl}."
-            r = client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": prompt}])
-            st.session_state.plano = r.choices[0].message.content
-    with col2:
-        if "plano" in st.session_state:
-            st.markdown(st.session_state.plano)
-
-# --- ABA 2: BIBLIOTECA (VISUALIZAÇÃO) ---
-with abas[1]:
-    st.header("📚 Manuais e Documentos")
-    c_lista, c_visor = st.columns([1, 2])
-    with c_lista:
-        for classe in CLASSES:
-            with st.expander(f"📁 {classe}"):
-                arquivos = os.listdir(os.path.join(BASE_DIR, classe))
-                for f_name in arquivos:
-                    col_txt, col_lixeira = st.columns([4, 1])
-                    if col_txt.button(f"📖 {f_name}", key=f"v_{classe}_{f_name}"):
-                        with open(os.path.join(BASE_DIR, classe, f_name), "rb") as f:
-                            st.session_state.pdf_ativo = f.read()
-                    
-                    # --- BLOQUEIO DA LIXEIRA ---
-                    if is_gerente:
-                        if col_lixeira.button("🗑️", key=f"del_{classe}_{f_name}"):
-                            os.remove(os.path.join(BASE_DIR, classe, f_name))
-                            st.rerun()
-    with c_visor:
-        if "pdf_ativo" in st.session_state:
-            pdf_viewer(input=st.session_state.pdf_ativo, width=700)
-
-# --- ABA 3: GERIR PORTAL (SÓ O GERENTE ENTRA) ---
-if is_gerente:
-    with abas[2]:
-        st.header("📂 Gestão de Ficheiros (Admin)")
-        target = st.selectbox("Enviar para:", CLASSES)
-        arq_up = st.file_uploader("Escolher PDF", type="pdf")
-        if arq_up and st.button("Salvar Permanentemente"):
-            with open(os.path.join(BASE_DIR, target, arq_up.name), "wb") as f:
-                f.write(arq_up.getbuffer())
-            st.success("Ficheiro guardado com sucesso!")
-
-
-
-# --- SISTEMA DE ARMAZENAMENTO PERMANENTE ---
-# Criar a pasta base se não existir
-BASE_DIR = "biblioteca_permanente"
-if not os.path.exists(BASE_DIR):
-    os.makedirs(BASE_DIR)
-
-CLASSES = ["Iniciação", "1ª Classe", "2ª Classe", "3ª Classe", "4ª Classe", "5ª Classe", "6ª Classe"]
-for c in CLASSES:
-    c_path = os.path.join(BASE_DIR, c)
-    if not os.path.exists(c_path):
-        os.makedirs(c_path)
-
-# Pasta para documentos gerais
-DOCS_GERAIS_DIR = os.path.join(BASE_DIR, "Gerais")
-if not os.path.exists(DOCS_GERAIS_DIR):
-    os.makedirs(DOCS_GERAIS_DIR)
-
-# --- ESTADO DA SESSÃO PARA O VISUALIZADOR ---
-if 'pdf_ativo' not in st.session_state:
-    st.session_state.pdf_ativo = None
-if 'nome_ativo' not in st.session_state:
-    st.session_state.nome_ativo = None
-
-# --- ESTRUTURA DE ABAS (IDÊNTICA À ANTERIOR) ---
-tab_gerador, tab_documentos, tab_livros = st.tabs([
-    "📝 GERADOR DE PLANOS", 
-    "📂 CENTRAL DE DOCUMENTOS", 
-    "📚 LIVROS POR CLASSE"
-])
-
-# --- JANELA 1: GERADOR ---
+# ---------------- GERADOR ----------------
 with tab_gerador:
-    st.header("📝 Criar Novo Plano de Aula")
-    st.info("Configure os detalhes na barra lateral.")
+    st.header("Criar Plano com IA")
 
-# --- JANELA 2: CENTRAL DE DOCUMENTOS (Upload Permanente) ---
-with tab_documentos:
-    st.header("📂 Área de Upload")
-    
-    col_u1, col_u2 = st.columns([1, 1])
-    
-    with col_u1:
-        st.subheader("Submeter Novo Arquivo")
-        tipo = st.radio("Destino:", ["Livro Escolar", "Documento Geral"])
-        
-        if tipo == "Livro Escolar":
-            c_alvo = st.selectbox("Classe:", CLASSES)
-            u_file = st.file_uploader("Carregar PDF do Livro", type="pdf", key="up_livro")
-            if u_file and st.button("Salvar na Biblioteca"):
-                # Salva o arquivo fisicamente na pasta da classe
-                caminho = os.path.join(BASE_DIR, c_alvo, u_file.name)
-                with open(caminho, "wb") as f:
-                    f.write(u_file.getbuffer())
-                st.success(f"Livro '{u_file.name}' guardado permanentemente!")
-        
-        else:
-            u_doc = st.file_uploader("Carregar PDF Geral", type="pdf", key="up_doc")
-            if u_doc and st.button("Salvar Documento Geral"):
-                # Salva o arquivo fisicamente na pasta Geral
-                caminho = os.path.join(DOCS_GERAIS_DIR, u_doc.name)
-                with open(caminho, "wb") as f:
-                    f.write(u_doc.getbuffer())
-                st.success("Documento geral guardado!")
+    disc = st.text_input("Disciplina")
+    tema = st.text_input("Tema")
+    classe = st.selectbox("Classe", CLASSES[:-1])
 
-    with col_u2:
-        st.subheader("Documentos Gerais")
-        arquivos_gerais = os.listdir(DOCS_GERAIS_DIR)
-        if arquivos_gerais:
-            for arq in arquivos_gerais:
-                col_btn, col_del = st.columns([3, 1])
-                if col_btn.button(f"👁️ Abrir {arq}", key=f"v_doc_{arq}"):
-                    with open(os.path.join(DOCS_GERAIS_DIR, arq), "rb") as f:
-                        st.session_state.pdf_ativo = f.read()
-                        st.session_state.nome_ativo = arq
-                # Opção para você como gestor apagar
-                if col_del.button("🗑️", key=f"del_doc_{arq}"):
-                    os.remove(os.path.join(DOCS_GERAIS_DIR, arq))
-                    st.rerun()
-        else:
-            st.write("Nenhum documento na base de dados.")
+    if st.button("Gerar Plano"):
+        try:
+            client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+            prompt = f"Plano de aula angolano (INIDE). Disciplina: {disc}, Tema: {tema}, Classe: {classe}."
+            r = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=1200
+            )
+            st.markdown(r.choices[0].message.content)
+        except:
+            st.error("Erro ao gerar plano. Verifique API.")
 
-# --- JANELA 3: LIVROS (Organização por Classe) ---
-with tab_livros:
-    st.header("📚 Biblioteca Digital (Manuais INIDE)")
-    
+# ---------------- BIBLIOTECA ----------------
+with tab_biblioteca:
+    st.header("Biblioteca Oficial")
+
     col_lista, col_visor = st.columns([1, 2])
-    
+
     with col_lista:
-        st.subheader("Classes")
         for classe in CLASSES:
-            with st.expander(f"📁 {classe}"):
-                arquivos_classe = os.listdir(os.path.join(BASE_DIR, classe))
-                if not arquivos_classe:
-                    st.caption("Sem livros nesta pasta.")
-                for arq in arquivos_classe:
-                    c_btn, c_del = st.columns([4, 1])
-                    if c_btn.button(f"📖 {arq}", key=f"liv_{classe}_{arq}"):
+            with st.expander(classe):
+                arquivos = os.listdir(os.path.join(BASE_DIR, classe))
+                if not arquivos:
+                    st.caption("Sem ficheiros.")
+                for arq in arquivos:
+                    col_btn, col_del = st.columns([4, 1])
+
+                    if col_btn.button(arq, key=f"view_{classe}_{arq}"):
                         with open(os.path.join(BASE_DIR, classe, arq), "rb") as f:
                             st.session_state.pdf_ativo = f.read()
                             st.session_state.nome_ativo = arq
-                    # Botão para apagar (Gestor)
-                    if c_del.button("🗑️", key=f"del_{classe}_{arq}"):
-                        os.remove(os.path.join(BASE_DIR, classe, arq))
-                        st.rerun()
-    
+
+                    # 🔐 APAGAR APENAS ADMIN
+                    if is_admin:
+                        if col_del.button("🗑️", key=f"del_{classe}_{arq}"):
+                            os.remove(os.path.join(BASE_DIR, classe, arq))
+                            st.rerun()
+
     with col_visor:
-        st.subheader("🖥️ Leitor Online")
-        if st.session_state.pdf_ativo is not None:
-            st.write(f"**Lendo:** {st.session_state.nome_ativo}")
-            if st.button("❌ Fechar Leitor"):
-                st.session_state.pdf_ativo = None
-                st.rerun()
-            
+        if "pdf_ativo" in st.session_state:
+            st.subheader(st.session_state.nome_ativo)
             pdf_viewer(input=st.session_state.pdf_ativo, width=700)
         else:
-            st.info("Selecione um material à esquerda.")
+            st.info("Selecione um documento.")
+
+# ---------------- GESTÃO (SÓ ADMIN) ----------------
+with tab_admin:
+
+    if not is_admin:
+        st.warning("Área restrita ao Administrador.")
+        st.stop()
+
+    st.header("Gestão do Portal")
+
+    classe_destino = st.selectbox("Enviar para Classe:", CLASSES)
+    ficheiro = st.file_uploader("Carregar PDF", type="pdf")
+
+    if ficheiro and st.button("Salvar Documento"):
+        caminho = os.path.join(BASE_DIR, classe_destino, ficheiro.name)
+
+        # 🔐 Proteção contra sobrescrever ficheiros existentes
+        if os.path.exists(caminho):
+            st.error("Já existe um ficheiro com este nome.")
+        else:
+            with open(caminho, "wb") as f:
+                f.write(ficheiro.getbuffer())
+            st.success("Documento guardado com sucesso.")
 
 # --- BARRA LATERAL ---
 with st.sidebar:
@@ -968,6 +870,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

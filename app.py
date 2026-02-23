@@ -1,11 +1,13 @@
 import streamlit as st
-from streamlit_pdf_viewer import pdf_viewer
 import os
 import io
-from openai import OpenAI
 import random
 import string
 import urllib.parse
+from streamlit_pdf_viewer import pdf_viewer
+from openai import OpenAI
+from docx import Document
+from docx.shared import Inches
 
 
 # ---------------- CONFIGURAÇÃO INICIAL ----------------
@@ -14,109 +16,210 @@ st.set_page_config(page_title="Portal Pedagógico Angola", layout="wide")
 st.title("🇦🇴 SISTEMA PROFISSIONAL DE ELABORAÇÃO DE PLANO DE AULA")
 st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 
-# Esconder elementos técnicos
-st.markdown("""
-<style>
-.stAppDeployButton {display:none;}
-footer {visibility:hidden;}
-</style>
-""", unsafe_allow_html=True)
+# =========================
+# LOGIN SIMPLES
+# =========================
 
-# ---------------- FUNÇÕES ----------------
-def gerar_codigo():
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+st.sidebar.title("🔐 Acesso ao Sistema")
 
+perfil = st.sidebar.selectbox("Perfil", ["Professor", "Administrador"])
 
-# ---------------- MENU LATERAL ----------------
-st.sidebar.title("MENU")
-st.sidebar.write(f"Utilizador: {st.session_state.user_email}")
+is_admin = False
+
+if perfil == "Administrador":
+    senha = st.sidebar.text_input("Senha Admin", type="password")
+    if senha == "admin123":  # ⚠ depois pode mudar
+        is_admin = True
+        st.sidebar.success("Acesso concedido")
+    elif senha:
+        st.sidebar.error("Senha incorreta")
+
+# =========================
+# CURRÍCULO SIMPLES (MODELO)
+# =========================
+
+curriculo = {
+    "1ª Classe": {
+        "Matemática": {
+            "Números Naturais": [
+                "Leitura e escrita de números até 20",
+                "Contagem progressiva e regressiva"
+            ]
+        },
+        "Língua Portuguesa": {
+            "Alfabeto": [
+                "Identificação das letras",
+                "Formação de sílabas simples"
+            ]
+        }
+    }
+}
+
+# =========================
+# ABAS
+# =========================
 
 if is_admin:
-    st.sidebar.success("ADMINISTRADOR")
+    tab_gerador, tab_biblioteca, tab_admin = st.tabs(
+        ["Gerador de Planos", "Biblioteca Digital", "Gestão do Portal"]
+    )
 else:
-    st.sidebar.info("PROFESSOR")
+    tab_gerador, tab_biblioteca = st.tabs(
+        ["Gerador de Planos", "Biblioteca Digital"]
+    )
 
-if st.sidebar.button("Terminar Sessão"):
-    st.session_state.autenticado = False
-    st.rerun()
+# =========================
+# ABA GERADOR
+# =========================
 
-# ---------------- ABAS ----------------
-tab_gerador, tab_biblioteca, tab_admin = st.tabs(
-    ["Gerador de Planos", "Biblioteca Digital", "Gestão do Portal"]
-)
-
-# ---------------- GERADOR ----------------
 with tab_gerador:
-    # Mostrar identificação no topo
-    
-    if st.button("Gerar Plano"):
-        try:
-            client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-            prompt = f"Plano de aula angolano (INIDE). Disciplina: {disc}, Tema: {tema}, Classe: {classe}."
-            r = client.chat.completions.create(
+
+    st.title("📘 Gerador Inteligente de Plano de Aula")
+
+    classe = st.selectbox("Classe", list(curriculo.keys()))
+    disciplina = st.selectbox("Disciplina", list(curriculo[classe].keys()))
+
+    temas = list(curriculo[classe][disciplina].keys())
+    tema = st.selectbox("Tema", temas)
+
+    conteudo_tema = curriculo[classe][disciplina][tema]
+
+    if isinstance(conteudo_tema, dict):
+        subtemas = list(conteudo_tema.keys())
+        subtema = st.selectbox("Subtema", subtemas)
+        conteudo_subtema = conteudo_tema[subtema]
+
+        if isinstance(conteudo_subtema, list):
+            sumario = st.selectbox("Sumário", conteudo_subtema)
+        else:
+            sumario = subtema
+    else:
+        sumario = st.selectbox("Sumário", conteudo_tema)
+
+    api_key = st.text_input("Chave OpenAI (opcional)", type="password")
+
+    if st.button("Gerar Plano de Aula"):
+
+        if api_key:
+            client = OpenAI(api_key=api_key)
+
+            prompt = f"""
+            Crie um plano de aula completo para:
+            Classe: {classe}
+            Disciplina: {disciplina}
+            Tema: {tema}
+            Sumário: {sumario}
+
+            Estrutura:
+            - Objectivo Geral
+            - Objectivos Específicos
+            - Metodologia
+            - Recursos
+            - Avaliação
+            """
+
+            resposta = client.chat.completions.create(
                 model="gpt-4o-mini",
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=1200
+                messages=[{"role": "user", "content": prompt}]
             )
-            st.markdown(r.choices[0].message.content)
-        except:
-            st.error("Erro ao gerar plano. Verifique API.")
 
-# ---------------- BIBLIOTECA ----------------
+            plano = resposta.choices[0].message.content
+
+        else:
+            plano = f"""
+PLANO DE AULA
+
+Classe: {classe}
+Disciplina: {disciplina}
+Tema: {tema}
+Sumário: {sumario}
+
+Objectivo Geral:
+Desenvolver competências relacionadas ao tema.
+
+Objectivos Específicos:
+- Compreender o conteúdo.
+- Aplicar o conhecimento em exercícios.
+
+Metodologia:
+Aula participativa com exemplos práticos.
+
+Recursos:
+Quadro, livro, caderno.
+
+Avaliação:
+Participação e exercícios práticos.
+"""
+
+        st.text_area("Plano Gerado", plano, height=400)
+
+        # Gerar Word
+        doc = Document()
+        doc.add_heading("Plano de Aula", level=1)
+        doc.add_paragraph(plano)
+
+        buffer = io.BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+
+        st.download_button(
+            label="📥 Baixar em Word",
+            data=buffer,
+            file_name="plano_de_aula.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
+
+# =========================
+# ABA BIBLIOTECA
+# =========================
+
 with tab_biblioteca:
-    st.header("Biblioteca Oficial")
 
-    col_lista, col_visor = st.columns([1, 2])
+    st.title("📚 Biblioteca Digital")
 
-    with col_lista:
-        for classe in CLASSES:
-            with st.expander(classe):
-                arquivos = os.listdir(os.path.join(BASE_DIR, classe))
-                if not arquivos:
-                    st.caption("Sem ficheiros.")
-                for arq in arquivos:
-                    col_btn, col_del = st.columns([4, 1])
+    classe_bib = st.selectbox("Selecionar Classe", CLASSES)
 
-                    if col_btn.button(arq, key=f"view_{classe}_{arq}"):
-                        with open(os.path.join(BASE_DIR, classe, arq), "rb") as f:
-                            st.session_state.pdf_ativo = f.read()
-                            st.session_state.nome_ativo = arq
+    pasta = os.path.join(BASE_DIR, classe_bib)
+    arquivos = os.listdir(pasta)
 
-                    # 🔐 APAGAR APENAS ADMIN
-                    if is_admin:
-                        if col_del.button("🗑️", key=f"del_{classe}_{arq}"):
-                            os.remove(os.path.join(BASE_DIR, classe, arq))
-                            st.rerun()
+    if arquivos:
+        for arquivo in arquivos:
+            caminho = os.path.join(pasta, arquivo)
+            with open(caminho, "rb") as f:
+                st.download_button(
+                    label=f"📄 {arquivo}",
+                    data=f,
+                    file_name=arquivo
+                )
+    else:
+        st.info("Nenhum documento disponível para esta classe.")
 
-    with col_visor:
-        if "pdf_ativo" in st.session_state:
-            st.subheader(st.session_state.nome_ativo)
-            pdf_viewer(input=st.session_state.pdf_ativo, width=700)
-        else:
-            st.info("Selecione um documento.")
+# =========================
+# ABA ADMIN (PROTEGIDA)
+# =========================
 
-# ---------------- GESTÃO (SÓ ADMIN) ----------------
-with tab_admin:
+if is_admin:
+    with tab_admin:
 
-    if not is_admin:
-        st.warning("Área restrita ao Administrador.")
-        st.stop()
+        st.title("⚙ Gestão do Portal")
 
-    st.header("Gestão do Portal")
+        classe_destino = st.selectbox("Enviar Documento para Classe", CLASSES)
+        ficheiro = st.file_uploader("Carregar PDF", type="pdf")
 
-    classe_destino = st.selectbox("Enviar para Classe:", CLASSES)
-    ficheiro = st.file_uploader("Carregar PDF", type="pdf")
+        if ficheiro and st.button("Salvar Documento"):
+            caminho = os.path.join(BASE_DIR, classe_destino, ficheiro.name)
 
-    if ficheiro and st.button("Salvar Documento"):
-        caminho = os.path.join(BASE_DIR, classe_destino, ficheiro.name)
+            if os.path.exists(caminho):
+                st.error("Já existe um documento com este nome.")
+            else:
+                with open(caminho, "wb") as f:
+                    f.write(ficheiro.getbuffer())
 
-        # 🔐 Proteção contra sobrescrever ficheiros existentes
-        if os.path.exists(caminho):
-            st.error("Já existe um ficheiro com este nome.")
-        else:
-            with open(caminho, "wb") as f:
-                f.write(ficheiro.getbuffer())
-            st.success("Documento guardado com sucesso.")
+                st.success("Documento guardado com sucesso.")
+
+
+
+#----------------NÃO MEXER---------NÃO MEXER--------NÃO MEXER---------NÃO MEXER----------NÃO MEXER
 
 # --- BARRA LATERAL ---
 with st.sidebar:
@@ -1050,6 +1153,7 @@ if is_admin:
                     f.write(ficheiro.getbuffer())
 
                 st.success("Documento guardado com sucesso.")
+
 
 
 

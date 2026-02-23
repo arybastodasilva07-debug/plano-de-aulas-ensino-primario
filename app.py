@@ -236,6 +236,8 @@ with abas[2]:
                         st.rerun()
 
 # --- ABA 4: GERENCIAR ARQUIVOS (EXCLUSIVA DO GERENTE) ---
+st.write(f"Caminho atual do servidor: {os.path.abspath(BASE_DIR)}")
+
 if is_gerente:
     with abas[3]:
         st.header("📂 Painel de Gestão de Conteúdo")
@@ -274,18 +276,18 @@ if is_gerente:
 
                 caminho_final = os.path.join(diretorio_destino, arquivo_upload.name)
 
-                # 3. Salvar o ficheiro
-                try:
-                    with open(caminho_final, "wb") as f:
-                        f.write(arquivo_upload.getbuffer())
-                    
-                    st.success(f"✅ Sucesso! O ficheiro '{arquivo_upload.name}' foi guardado.")
-                    st.balloons()
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Erro ao gravar o ficheiro: {e}")
-            else:
-                st.warning("⚠️ Por favor, selecione um ficheiro antes de confirmar.")
+                # 2. VERIFICAÇÃO E CRIAÇÃO
+                os.makedirs(diretorio_destino, exist_ok=True)
+                caminho_final = os.path.join(diretorio_destino, arquivo_upload.name)
+
+                # 3. GRAVAÇÃO FORÇADA
+                with open(caminho_final, "wb") as f:
+                    f.write(arquivo_upload.getbuffer())
+                
+                # 4. LIMPEZA DE CACHE (Para o Streamlit "ver" o ficheiro novo)
+                st.cache_data.clear() 
+                st.success(f"✅ Guardado em: {diretorio_destino}")
+                st.rerun()
 
         st.divider()
         st.subheader("📊 Resumo do Servidor")
@@ -1025,6 +1027,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

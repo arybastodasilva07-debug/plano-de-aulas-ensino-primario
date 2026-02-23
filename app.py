@@ -51,7 +51,7 @@ if not st.session_state.autenticado:
 
     with tab_solicitar:
         st.subheader("Solicitar Nova Chave")
-        st.write("Clique no botão abaixo para gerar o seu pedido e enviá-lo via WhatsApp ao Administrador Ary Basto.")
+        st.write("Clique no botão abaixo para gerar o seu pedido e enviá-lo via WhatsApp ao Administrador António Basto.")
         
         email_novo = st.text_input("Introduza o seu e-mail para registo")
         
@@ -60,11 +60,11 @@ if not st.session_state.autenticado:
                 cod_sugerido = gerar_codigo()
                 
                 # Criar a mensagem para o WhatsApp
-                texto_whatsapp = f"Olá Ary Basto! Sou o professor(a) {email_novo}. Gostaria de adquirir o acesso ao Portal de Planos de Aula. Código de Referência: {cod_sugerido}"
+                texto_whatsapp = f"Olá António Basto! Sou o professor(a) {email_novo}. Gostaria de adquirir o acesso ao Portal de Planos de Aula. Código de Referência: {cod_sugerido}"
                 texto_url = urllib.parse.quote(texto_whatsapp)
                 
                 # Substitua pelo seu número real (exemplo: 244900000000)
-                seu_numero = "244923000000" # <--- MUDE PARA O SEU NÚMERO AQUI
+                seu_numero = "244954458413" # <--- MUDE PARA O SEU NÚMERO AQUI
                 
                 link_wa = f"https://wa.me/{seu_numero}?text={texto_url}"
                 
@@ -988,6 +988,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

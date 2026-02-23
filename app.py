@@ -64,7 +64,7 @@ if not st.session_state.autenticado:
                 texto_url = urllib.parse.quote(texto_whatsapp)
                 
                 # Substitua pelo seu número real (exemplo: 244900000000)
-                seu_numero = "244954458413" # <--- MUDE PARA O SEU NÚMERO AQUI
+                seu_numero = "244948298246" # <--- MUDE PARA O SEU NÚMERO AQUI
                 
                 link_wa = f"https://wa.me/{seu_numero}?text={texto_url}"
                 
@@ -988,6 +988,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

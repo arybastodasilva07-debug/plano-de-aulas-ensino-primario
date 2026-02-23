@@ -92,12 +92,36 @@ if not st.session_state.autenticado:
 # Se chegou aqui, o login foi um sucesso
 is_gerente = (st.session_state.user_email == st.secrets["ADMIN_EMAIL"].strip())
 
-# Configurar pastas da biblioteca
+# --- 1. CONFIGURAÇÃO DE PASTAS (Acrescente isto na parte de pastas) ---
 BASE_DIR = "biblioteca_permanente"
-CLASSES = ["Iniciação", "1ª Classe", "2ª Classe", "3ª Classe", "4ª Classe", "5ª Classe", "6ª Classe", " Documentos Gerais"]
-for c in CLASSES:
-    path = os.path.join(BASE_DIR, c)
-    if not os.path.exists(path): os.makedirs(path)
+CLASSES_NOMES = ["Iniciação", "1ª Classe", "2ª Classe", "3ª Classe", "4ª Classe", "5ª Classe", "6ª Classe"]
+
+# Lista completa de pastas da Central de Documentos
+ESTRUTURA_DOCS = {
+    "Calendário Escolar": None,
+    "Programas do Ensino Primário": CLASSES_NOMES,
+    "Dosificações": CLASSES_NOMES,
+    "Decretos": None,
+    "Constituição da República": None,
+    "Lei de Bases": None,
+    "Regulamento Escolar": None,
+    "Currículo por Nível": None,
+    "Estatuto da Carreira Docente": None,
+    "Estatuto do Ministério": None,
+    "Cadernos de Avaliação": None,
+    "Decretos Presidenciais": None,
+    "Didáctica Geral e Pedagogia": None,
+    "Outros Documentos": None
+}
+
+# Criar a estrutura fisicamente
+for pasta, subpastas in ESTRUTURA_DOCS.items():
+    p_path = os.path.join(BASE_DIR, "Documentos_Centrais", pasta)
+    if not os.path.exists(p_path): os.makedirs(p_path)
+    if subpastas:
+        for sub in subpastas:
+            s_path = os.path.join(p_path, sub)
+            if not os.path.exists(s_path): os.makedirs(s_path)
 
 # ---------------- 5. INTERFACE PRINCIPAL ----------------
 with st.sidebar:
@@ -135,25 +159,61 @@ with abas[0]:
 
 # --- ABA 2: CENTRAL DE DOCUMENTOS (Visualização para todos) ---
 with abas[1]:
-    st.header("📂 Central de Documentos Gerais")
-    arquivos_gerais = os.listdir(os.path.join(BASE_DIR, "Gerais"))
+    st.header("📂 Central de Documentos Oficiais")
+    st.info("Consulte ou baixe a documentação oficial do sistema de ensino.")
     
-    for arq in arquivos_gerais:
-        col_txt, col_del = st.columns([4, 1])
-        
-        if col_txt.button(f"👁️ Abrir {arq}", key=f"btn_geral_{arq}"):
-            with open(os.path.join(BASE_DIR, "Gerais", arq), "rb") as f:
-                st.session_state.pdf_ativo = f.read()
-        
-        # BLOQUEIO: Só o gerente vê o botão de apagar
-        if is_gerente:
-            if col_del.button("🗑️", key=f"del_geral_{arq}"):
-                os.remove(os.path.join(BASE_DIR, "Gerais", arq))
-                st.rerun()
+    # Criamos um expander para cada categoria principal
+    for categoria, subcategorias in ESTRUTURA_DOCS.items():
+        with st.expander(f"📁 {categoria.upper()}"):
+            caminho_cat = os.path.join(BASE_DIR, "Documentos_Centrais", categoria)
+            
+            # Se a categoria tiver subpastas (como Programas e Dosificações)
+            if subcategorias:
+                for sub in subcategorias:
+                    st.markdown(f"**📍 {sub}**")
+                    caminho_sub = os.path.join(caminho_cat, sub)
+                    files = os.listdir(caminho_sub)
+                    if not files:
+                        st.caption("Nenhum arquivo nesta subpasta.")
+                    for f in files:
+                        col_arq, col_down, col_del = st.columns([3, 1, 0.5])
+                        with open(os.path.join(caminho_sub, f), "rb") as file_bytes:
+                            btn_data = file_bytes.read()
+                        
+                        col_arq.write(f"📄 {f}")
+                        # Botão de Download (Para todos)
+                        col_down.download_button("📥 Baixar", btn_data, file_name=f, key=f"down_{categoria}_{sub}_{f}")
+                        
+                        # Lixeira (Só Gerente)
+                        if is_gerente:
+                            if col_del.button("🗑️", key=f"del_{categoria}_{sub}_{f}"):
+                                os.remove(os.path.join(caminho_sub, f))
+                                st.rerun()
+                    st.divider()
+            
+            # Se for uma pasta simples (sem subpastas de classe)
+            else:
+                files = os.listdir(caminho_cat)
+                if not files:
+                    st.caption("Nenhum arquivo disponível aqui.")
+                for f in files:
+                    col_arq, col_down, col_del = st.columns([3, 1, 0.5])
+                    with open(os.path.join(caminho_cat, f), "rb") as file_bytes:
+                        btn_data = file_bytes.read()
+                    
+                    col_arq.write(f"📄 {f}")
+                    # Botão de Download (Para todos)
+                    col_down.download_button("📥 Baixar", btn_data, file_name=f, key=f"down_{categoria}_{f}")
+                    
+                    # Lixeira (Só Gerente)
+                    if is_gerente:
+                        if col_del.button("🗑️", key=f"del_{categoria}_{f}"):
+                            os.remove(os.path.join(caminho_cat, f))
+                            st.rerun()
 
 # --- ABA 3: LIVROS POR CLASSE (Visualização para todos) ---
 with abas[2]:
-    st.header("📚 Livros por Classe")
+    st.header("📚 Biblioteca Digital (Manuais-INIDE")
     for classe in CLASSES[:-1]: # Itera pelas classes
         with st.expander(f"📁 {classe}"):
             arquivos = os.listdir(os.path.join(BASE_DIR, classe))
@@ -171,23 +231,53 @@ with abas[2]:
                         st.rerun()
 
 # --- ABA 4: GERENCIAR ARQUIVOS (EXCLUSIVA DO GERENTE) ---
-# Usamos um 'try/except' ou verificamos o índice para evitar erros se a aba não existir para o professor
 if is_gerente:
     with abas[3]:
-        st.header("📂 Painel de Gerência (Upload)")
-        st.info("Utilize esta área para alimentar a biblioteca do portal.")
+        st.header("📂 Painel de Gestão de Conteúdo")
+        st.info("Utilize esta área para carregar novos documentos para o portal.")
+
+        # 1. Seleção do Destino Principal
+        # Criamos uma lista com as categorias da Central de Documentos + as pastas dos Livros
+        categorias_principais = list(ESTRUTURA_DOCS.keys()) + CLASSES_NOMES
+        destino_cat = st.selectbox("1. Selecione a Categoria/Pasta Principal:", categorias_principais)
+
+        # 2. Seleção de Subpasta (Se existir)
+        # Verifica se a categoria selecionada tem subpastas (ex: Programas, Dosificações)
+        subpasta_alvo = ""
+        if destino_cat in ESTRUTURA_DOCS and ESTRUTURA_DOCS[destino_cat] is not None:
+            subpasta_alvo = st.selectbox(f"2. Selecione a Classe para '{destino_cat}':", ESTRUTURA_DOCS[destino_cat])
         
-        col_up1, col_up2 = st.columns(2)
-        with col_up1:
-            destino = st.selectbox("Escolha o destino do arquivo:", CLASSES)
-            arquivo_novo = st.file_uploader("Selecione o PDF", type="pdf")
-            
-            if arquivo_novo and st.button("🚀 Confirmar Upload"):
-                caminho_final = os.path.join(BASE_DIR, destino, arquivo_novo.name)
+        # 3. Upload do Ficheiro
+        arquivo_upload = st.file_uploader("3. Selecione o ficheiro PDF:", type="pdf")
+
+        if st.button("🚀 Confirmar e Salvar no Portal"):
+            if arquivo_upload is not None:
+                # Construção do caminho final
+                if destino_cat in CLASSES_NOMES:
+                    # Se for para a aba "Livros por Classe"
+                    caminho_final = os.path.join(BASE_DIR, destino_cat, arquivo_upload.name)
+                else:
+                    # Se for para a "Central de Documentos"
+                    if subpasta_alvo:
+                        caminho_final = os.path.join(BASE_DIR, "Central_Documentos", destino_cat, subpasta_alvo, arquivo_upload.name)
+                    else:
+                        caminho_final = os.path.join(BASE_DIR, "Central_Documentos", destino_cat, arquivo_upload.name)
+
+                # Salvar o ficheiro fisicamente
                 with open(caminho_final, "wb") as f:
-                    f.write(arquivo_novo.getbuffer())
-                st.success(f"Arquivo '{arquivo_novo.name}' salvo em {destino}!")
+                    f.write(arquivo_upload.getbuffer())
+                
+                st.success(f"✅ Sucesso! O ficheiro '{arquivo_upload.name}' foi guardado em: {destino_cat} {'/' + subpasta_alvo if subpasta_alvo else ''}")
+                st.balloons()
                 st.rerun()
+            else:
+                st.warning("⚠️ Por favor, selecione um ficheiro antes de confirmar.")
+
+        st.divider()
+        st.subheader("📊 Resumo do Servidor")
+        # Pequena estatística para o gerente
+        total_arquivos = sum([len(files) for r, d, files in os.walk(BASE_DIR)])
+        st.write(f"O portal contém atualmente **{total_arquivos}** documentos carregados.")
 
 
 # --- SISTEMA DE ARMAZENAMENTO PERMANENTE ---
@@ -921,6 +1011,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

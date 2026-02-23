@@ -15,68 +15,66 @@ st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
 st.title("🇦🇴 SISTEMA PROFISSIONAL DE ELABORAÇÃO DE PLANO DE AULA")
 st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 
-# --- 1. INICIALIZAÇÃO ---
-if "autenticado" not in st.session_state:
-    st.session_state.autenticado = False
-
-# 1. FUNÇÃO PARA GERAR SENHA ALEATÓRIA
+# --- 1. FUNÇÕES DE APOIO ---
 def gerar_codigo():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
-# 2. FUNÇÃO PARA ENVIAR O E-MAIL
 def enviar_email_notificacao(email_do_professor, codigo_gerado):
     try:
         remetente = st.secrets["EMAIL_REMETENTE"]
         senha_app = st.secrets["EMAIL_SENHA"]
-        
-        # Conteúdo da mensagem que VOCÊ vai receber
-        corpo = f"""
-        NOVA SOLICITAÇÃO DE ACESSO
-        ---------------------------
-        Professor: {email_do_professor}
-        Código Sugerido: {codigo_gerado}
-        
-        Instruções: Confirme o pagamento e envie este código ao professor.
-        """
-        
+        corpo = f"Solicitação de Acesso\nProfessor: {email_do_professor}\nCódigo Sugerido: {codigo_gerado}"
         msg = MIMEText(corpo)
-        msg['Subject'] = f"🔔 Novo Pedido de Acesso: {email_do_professor}"
+        msg['Subject'] = f"🔔 Novo Pedido: {email_do_professor}"
         msg['From'] = remetente
-        msg['To'] = remetente # Envia para ti próprio
-        
-        # Conexão segura com o servidor do Gmail
+        msg['To'] = remetente
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
             server.login(remetente, senha_app)
             server.send_message(msg)
         return True
-    except Exception as e:
-        print(f"Erro ao enviar: {e}")
+    except:
         return False
 
-# --- DENTRO DA ABA SOLICITAR (NO BOTÃO) ---
-with tab_solicitar:
-    email_novo = st.text_input("Teu e-mail de contacto")
-    
-    if st.button("Enviar Pedido ao Gerente"):
-        if "@" in email_novo:
-            with st.spinner("Processando pedido..."):
-                # Gera o código primeiro
-                codigo_sugerido = gerar_codigo()
-                
-                # Tenta enviar o e-mail real
-                enviou = enviar_email_notificacao(email_novo, codigo_sugerido)
-                
-                if enviou:
-                    st.success("✅ Pedido enviado com sucesso!")
-                    st.write(f"O administrador (Ary Basto) recebeu o seu pedido para o e-mail: **{email_novo}**")
-                    st.info("Assim que o pagamento for confirmado, ele enviará a sua chave de acesso.")
-                else:
-                    st.error("❌ Erro ao enviar notificação. Verifique se a 'Senha de App' nos Secrets está correta.")
-        else:
-            st.warning("Introduza um e-mail válido.")
+# --- 2. SISTEMA DE LOGIN E SOLICITAÇÃO ---
+if "autenticado" not in st.session_state:
+    st.session_state.autenticado = False
 
-# --- 3. ÁREA PROTEGIDA (O RESTO DO SEU APP) ---
-st.success(f"Bem-vindo, {st.session_state.user_email}")
+if not st.session_state.autenticado:
+    st.title("🇦🇴 SISTEMA DE PLANOS DE AULA")
+    # AQUI ESTAVA O ERRO: Criar as abas de login primeiro
+    tab_login, tab_solicitar = st.tabs(["🔐 Entrar", "🔑 Gerar/Solicitar Senha"])
+
+    with tab_login:
+        email_in = st.text_input("E-mail").strip().lower()
+        pass_in = st.text_input("Senha", type="password").strip()
+        if st.button("Entrar"):
+            if email_in in st.secrets["PASSWORDS"] and pass_in == str(st.secrets["PASSWORDS"][email_in]):
+                st.session_state.autenticado = True
+                st.session_state.user_email = email_in
+                st.rerun()
+            else:
+                st.error("Credenciais inválidas.")
+
+    with tab_solicitar:
+        st.subheader("Solicitar Acesso")
+        email_novo = st.text_input("Seu e-mail de contacto")
+        if st.button("Enviar Pedido"):
+            if "@" in email_novo:
+                cod = gerar_codigo()
+                if enviar_email_notificacao(email_novo, cod):
+                    st.success("Pedido enviado ao gerente Ary Basto!")
+                else:
+                    st.error("Erro no envio. Verifique EMAIL_SENHA nos Secrets.")
+    st.stop() # Bloqueia o resto do app
+
+# --- 3. ÁREA PROTEGIDA (O RESTO DO SEU CÓDIGO) ---
+# Se chegou aqui, o usuário está logado!
+is_gerente = (st.session_state.user_email == st.secrets["ADMIN_EMAIL"])
+
+st.sidebar.write(f"Sessão: {st.session_state.user_email}")
+if st.sidebar.button("Sair"):
+    st.session_state.autenticado = False
+    st.rerun()
     
 # --- SISTEMA DE ARMAZENAMENTO PERMANENTE ---
 # Criar a pasta base se não existir
@@ -895,6 +893,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

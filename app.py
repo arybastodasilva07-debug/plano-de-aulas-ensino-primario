@@ -14,59 +14,30 @@ st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
 st.title("🇦🇴 SISTEMA PROFISSIONAL DE ELABORAÇÃO DE PLANO DE AULA")
 st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 
+# --- 3. CONTROLO DE SESSÃO E LOGIN (VERSÃO CORRIGIDA) ---
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
 
-# TELA DE LOGIN (Só passa daqui se o código estiver correto)
 if not st.session_state.autenticado:
-    st.title("🔐 Acesso Restrito")
-    email_login = st.text_input("E-mail Google").strip()
+    st.title("🔐 Acesso ao Sistema")
+    
+    email_login = st.text_input("E-mail Google").strip() # .strip() remove espaços acidentais
     codigo_login = st.text_input("Código de Ativação", type="password").strip()
     
-    if st.button("Entrar"):
-        if codigo_login == st.secrets["CODIGO_MESTRE"].strip():
-            st.session_state.autenticado = True
-            st.session_state.user_email = email_login
-            st.rerun()
+    if st.button("Entrar no Sistema"):
+        # Verificamos se os campos não estão vazios
+        if not email_login or not codigo_login:
+            st.warning("Por favor, preencha todos os campos.")
         else:
-            st.error("Código inválido.")
+            # Comparamos ignorando espaços extras
+            if codigo_login == st.secrets["CODIGO_MESTRE"].strip():
+                st.session_state.autenticado = True
+                st.session_state.user_email = email_login
+                st.success("Acesso autorizado!")
+                st.rerun()
+            else:
+                st.error("Código incorreto.")
     st.stop()
-
-# --- 2. LOGICA PÓS-LOGIN (SÓ CHEGA AQUI SE ESTIVER AUTENTICADO) ---
-
-# Definimos se o usuário é o gerente
-is_gerente = (st.session_state.user_email == st.secrets["ADMIN_EMAIL"])
-
-# --- 3. CRIAÇÃO DAS ABAS BASEADA NO PERFIL ---
-# Se for gerente, ele ganha a aba "⚙️ Gerenciar Aplicativo"
-if is_gerente:
-    abas = st.tabs(["📝 Gerador de Planos", "📚 Biblioteca", "⚙️ Gerenciar Aplicativo"])
-else:
-    # Usuário comum só vê estas duas
-    abas = st.tabs(["📝 Gerador de Planos", "📚 Biblioteca"])
-
-# --- CONTEÚDO DAS ABAS ---
-
-with abas[0]:
-    st.header("📝 Gerador de Planos")
-    st.write("Bem-vindo ao gerador.")
-
-with abas[1]:
-    st.header("📚 Biblioteca de Livros")
-    # Aqui vai o código da biblioteca (visualização apenas)
-    st.write("Consulte os manuais oficiais aqui.")
-
-# --- ESTA ABA SÓ EXISTE NO ÍNDICE 2 SE FOR GERENTE ---
-if is_gerente:
-    with abas[2]:
-        st.header("⚙️ Painel de Gestão (Administrador)")
-        st.write("Aqui você pode carregar novos livros ou apagar arquivos.")
-        
-        # O código de UPLOAD e DELETE fica guardado aqui dentro
-        u_file = st.file_uploader("Submeter novo manual", type="pdf")
-        if u_file and st.button("Confirmar Upload"):
-            # Lógica de salvar...
-            st.success("Arquivo salvo com sucesso!")
 
 # --- SISTEMA DE ARMAZENAMENTO PERMANENTE ---
 # Criar a pasta base se não existir
@@ -885,6 +856,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

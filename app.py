@@ -137,19 +137,6 @@ if is_gerente:
 
 # ======== NÃO MEXER ================= # NÃO MEXE # =========== NÃO MEXER ==============  CIMA
 
-# --- SISTEMA DE ARMAZENAMENTO PERMANENTE ---
-# Criar a pasta base se não existir
-BASE_DIR = "biblioteca_permanente"
-if not os.path.exists(BASE_DIR):
-    os.makedirs(BASE_DIR)
-
-CLASSES = ["Iniciação", "1ª Classe", "2ª Classe", "3ª Classe", "4ª Classe", "5ª Classe", "6ª Classe"]
-for c in CLASSES:
-    c_path = os.path.join(BASE_DIR, c)
-    if not os.path.exists(c_path):
-        os.makedirs(c_path)
-
-
 
                                                 #BAIXO BAIXO
                                                 
@@ -1087,6 +1074,7 @@ if is_admin:
                     f.write(ficheiro.getbuffer())
 
                 st.success("Documento guardado com sucesso.")
+
 
 
 

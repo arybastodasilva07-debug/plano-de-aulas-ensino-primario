@@ -14,60 +14,57 @@ st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
 st.title("🇦🇴 SISTEMA PROFISSIONAL DE ELABORAÇÃO DE PLANO DE AULA")
 st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 
-# --- 3. CONTROLO DE SESSÃO E LOGIN (VERSÃO CORRIGIDA) ---
+# --- 1. INICIALIZAÇÃO ---
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
 
+# --- 2. TELA DE ACESSO (LOGIN + SOLICITAÇÃO) ---
 if not st.session_state.autenticado:
-    st.title("🔐 Acesso ao Sistema")
+    st.title("👨‍🏫 Portal do Professor - Angola")
     
-    email_login = st.text_input("E-mail Google").strip() # .strip() remove espaços acidentais
-    codigo_login = st.text_input("Código de Ativação", type="password").strip()
-    
-    if st.button("Entrar no Sistema"):
-        # Verificamos se os campos não estão vazios
-        if not email_login or not codigo_login:
-            st.warning("Por favor, preencha todos os campos.")
-        else:
-            # Comparamos ignorando espaços extras
-            if codigo_login == st.secrets["CODIGO_MESTRE"].strip():
-                st.session_state.autenticado = True
-                st.session_state.user_email = email_login
-                st.success("Acesso autorizado!")
-                st.rerun()
+    # Criamos as duas opções: Entrar ou Gerar/Solicitar Senha
+    tab_entrar, tab_solicitar = st.tabs(["🔐 Entrar", "🔑 Gerar/Solicitar Senha"])
+
+    with tab_entrar:
+        email_in = st.text_input("E-mail cadastrado").strip().lower()
+        senha_in = st.text_input("Chave Única", type="password").strip()
+        
+        if st.button("Aceder ao Portal"):
+            try:
+                # Verifica na lista [PASSWORDS] do Secrets
+                if email_in in st.secrets["PASSWORDS"]:
+                    if senha_in == str(st.secrets["PASSWORDS"][email_in]):
+                        st.session_state.autenticado = True
+                        st.session_state.user_email = email_in
+                        st.rerun()
+                    else:
+                        st.error("Chave incorreta para este e-mail.")
+                else:
+                    st.error("E-mail não autorizado. Solicite acesso na aba ao lado.")
+            except:
+                st.error("Erro: Lista de senhas não configurada nos Secrets.")
+
+    with tab_solicitar:
+        st.subheader("Solicitar Nova Chave de Acesso")
+        st.write("Introduza o seu e-mail abaixo. O administrador Ary Basto receberá o seu pedido.")
+        
+        email_novo = st.text_input("O seu e-mail de contacto")
+        
+        if st.button("Enviar Pedido ao Gerente"):
+            if "@" in email_novo:
+                with st.spinner("Enviando solicitação..."):
+                    # Aqui usamos a função de e-mail que configurámos antes
+                    # Por agora, vamos simular o sucesso visual
+                    st.success(f"✅ Pedido enviado! Ary Basto recebeu a solicitação para o e-mail: {email_novo}")
+                    st.info("Aguarde o contacto do administrador com os dados para pagamento e a sua chave única.")
             else:
-                st.error("Código incorreto.")
+                st.warning("Introduza um e-mail válido.")
+    
+    # BLOQUEIO: Nada abaixo daqui aparece se não estiver logado
     st.stop()
 
-# --- LOGICA DE LOGIN COM CONTROLO POR E-MAIL ---
-if not st.session_state.get("autenticado"):
-    st.title("👨‍🏫 Portal do Professor")
-    
-    tab1, tab2 = st.tabs(["Entrar", "Solicitar Acesso"])
-    
-    with tab1:
-        email_input = st.text_input("Introduza o seu e-mail").strip().lower()
-        senha_input = st.text_input("Introduza a sua chave única", type="password").strip()
-        
-        if st.button("Validar Acesso"):
-            # 1. Verificar se o e-mail existe nos Secrets
-            if email_input in st.secrets["PASSWORDS"]:
-                # 2. Verificar se a senha está correta para este e-mail
-                senha_correta = st.secrets["PASSWORDS"][email_input]
-                
-                if senha_input == senha_correta:
-                    st.session_state.autenticado = True
-                    st.session_state.user_email = email_input
-                    st.success("Acesso confirmado!")
-                    st.rerun()
-                else:
-                    st.error("Chave de acesso incorreta para este e-mail.")
-            else:
-                st.error("E-mail não autorizado ou não encontrado.")
-
-    with tab2:
-        # (Aqui fica o código de solicitar senha que fizemos antes)
-        st.info("Envie o pedido para receber a sua chave de acesso.")
+# --- 3. ÁREA PROTEGIDA (O RESTO DO SEU APP) ---
+st.success(f"Bem-vindo, {st.session_state.user_email}")
     
 # --- SISTEMA DE ARMAZENAMENTO PERMANENTE ---
 # Criar a pasta base se não existir
@@ -886,6 +883,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

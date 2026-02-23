@@ -8,6 +8,10 @@ import io
 import os
 import streamlit as st
 import os
+import smtplib
+from email.mime.text import MIMEText
+import random
+import string
 
 # ---------------- CONFIGURAÇÃO ----------------
 st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
@@ -18,50 +22,61 @@ st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
 
-# --- 2. TELA DE ACESSO (LOGIN + SOLICITAÇÃO) ---
-if not st.session_state.autenticado:
-    st.title("👨‍🏫 Portal do Professor - Angola")
-    
-    # Criamos as duas opções: Entrar ou Gerar/Solicitar Senha
-    tab_entrar, tab_solicitar = st.tabs(["🔐 Entrar", "🔑 Gerar/Solicitar Senha"])
+# 1. FUNÇÃO PARA GERAR SENHA ALEATÓRIA
+def gerar_codigo():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
-    with tab_entrar:
-        email_in = st.text_input("E-mail cadastrado").strip().lower()
-        senha_in = st.text_input("Chave Única", type="password").strip()
+# 2. FUNÇÃO PARA ENVIAR O E-MAIL
+def enviar_email_notificacao(email_do_professor, codigo_gerado):
+    try:
+        remetente = st.secrets["EMAIL_REMETENTE"]
+        senha_app = st.secrets["EMAIL_SENHA"]
         
-        if st.button("Aceder ao Portal"):
-            try:
-                # Verifica na lista [PASSWORDS] do Secrets
-                if email_in in st.secrets["PASSWORDS"]:
-                    if senha_in == str(st.secrets["PASSWORDS"][email_in]):
-                        st.session_state.autenticado = True
-                        st.session_state.user_email = email_in
-                        st.rerun()
-                    else:
-                        st.error("Chave incorreta para este e-mail.")
+        # Conteúdo da mensagem que VOCÊ vai receber
+        corpo = f"""
+        NOVA SOLICITAÇÃO DE ACESSO
+        ---------------------------
+        Professor: {email_do_professor}
+        Código Sugerido: {codigo_gerado}
+        
+        Instruções: Confirme o pagamento e envie este código ao professor.
+        """
+        
+        msg = MIMEText(corpo)
+        msg['Subject'] = f"🔔 Novo Pedido de Acesso: {email_do_professor}"
+        msg['From'] = remetente
+        msg['To'] = remetente # Envia para ti próprio
+        
+        # Conexão segura com o servidor do Gmail
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(remetente, senha_app)
+            server.send_message(msg)
+        return True
+    except Exception as e:
+        print(f"Erro ao enviar: {e}")
+        return False
+
+# --- DENTRO DA ABA SOLICITAR (NO BOTÃO) ---
+with tab_solicitar:
+    email_novo = st.text_input("Teu e-mail de contacto")
+    
+    if st.button("Enviar Pedido ao Gerente"):
+        if "@" in email_novo:
+            with st.spinner("Processando pedido..."):
+                # Gera o código primeiro
+                codigo_sugerido = gerar_codigo()
+                
+                # Tenta enviar o e-mail real
+                enviou = enviar_email_notificacao(email_novo, codigo_sugerido)
+                
+                if enviou:
+                    st.success("✅ Pedido enviado com sucesso!")
+                    st.write(f"O administrador (Ary Basto) recebeu o seu pedido para o e-mail: **{email_novo}**")
+                    st.info("Assim que o pagamento for confirmado, ele enviará a sua chave de acesso.")
                 else:
-                    st.error("E-mail não autorizado. Solicite acesso na aba ao lado.")
-            except:
-                st.error("Erro: Lista de senhas não configurada nos Secrets.")
-
-    with tab_solicitar:
-        st.subheader("Solicitar Nova Chave de Acesso")
-        st.write("Introduza o seu e-mail abaixo. O administrador Ary Basto receberá o seu pedido.")
-        
-        email_novo = st.text_input("O seu e-mail de contacto")
-        
-        if st.button("Enviar Pedido ao Gerente"):
-            if "@" in email_novo:
-                with st.spinner("Enviando solicitação..."):
-                    # Aqui usamos a função de e-mail que configurámos antes
-                    # Por agora, vamos simular o sucesso visual
-                    st.success(f"✅ Pedido enviado! Ary Basto recebeu a solicitação para o e-mail: {email_novo}")
-                    st.info("Aguarde o contacto do administrador com os dados para pagamento e a sua chave única.")
-            else:
-                st.warning("Introduza um e-mail válido.")
-    
-    # BLOQUEIO: Nada abaixo daqui aparece se não estiver logado
-    st.stop()
+                    st.error("❌ Erro ao enviar notificação. Verifique se a 'Senha de App' nos Secrets está correta.")
+        else:
+            st.warning("Introduza um e-mail válido.")
 
 # --- 3. ÁREA PROTEGIDA (O RESTO DO SEU APP) ---
 st.success(f"Bem-vindo, {st.session_state.user_email}")
@@ -883,6 +898,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

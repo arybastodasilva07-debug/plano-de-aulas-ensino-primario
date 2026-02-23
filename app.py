@@ -92,11 +92,16 @@ if not st.session_state.autenticado:
 # Se chegou aqui, o login foi um sucesso
 is_gerente = (st.session_state.user_email == st.secrets["ADMIN_EMAIL"].strip())
 
-# --- 1. CONFIGURAÇÃO DE PASTAS (Acrescente isto na parte de pastas) ---
+# --- 1. CONFIGURAÇÃO DE PASTAS E NOMES (COLOQUE NO TOPO) ---
 BASE_DIR = "biblioteca_permanente"
-CLASSES_NOMES = ["Iniciação", "1ª Classe", "2ª Classe", "3ª Classe", "4ª Classe", "5ª Classe", "6ª Classe"]
 
-# Lista completa de pastas da Central de Documentos
+# Esta é a lista que o seu erro diz estar em falta:
+CLASSES = ["Iniciação", "1ª Classe", "2ª Classe", "3ª Classe", "4ª Classe", "5ª Classe", "6ª Classe", "Gerais"]
+
+# Esta lista é usada para a estrutura de documentos (sem o "Gerais")
+CLASSES_NOMES = CLASSES[:-1] 
+
+# Estrutura da Central de Documentos
 ESTRUTURA_DOCS = {
     "Calendário Escolar": None,
     "Programas do Ensino Primário": CLASSES_NOMES,
@@ -1011,6 +1016,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

@@ -107,46 +107,6 @@ titulos_abas = ["📝 GERADOR", "📚 BIBLIOTECA"]
 if is_gerente: titulos_abas.append("📂 GERENCIAR ARQUIVOS")
 abas = st.tabs(titulos_abas)
 
-# --- ABA: GERADOR ---
-with abas[0]:
-    st.header("📝 Criar Plano de Aula")
-    col_a, col_b = st.columns(2)
-    with col_a:
-        disciplina = st.text_input("Disciplina")
-        tema = st.text_input("Tema da Aula")
-        classe_sel = st.selectbox("Classe", CLASSES[:-1])
-        if st.button("✨ Gerar Plano"):
-            with st.spinner("IA a trabalhar..."):
-                client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-                prompt = f"Crie um plano de aula detalhado para Angola seguindo o modelo do INIDE. Disciplina: {disciplina}, Tema: {tema}, Classe: {classe_sel}."
-                resp = client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": prompt}])
-                st.session_state.plano = resp.choices[0].message.content
-    with col_b:
-        if "plano" in st.session_state:
-            st.markdown(st.session_state.plano)
-            doc = Document()
-            doc.add_heading(f"Plano de Aula - {tema}", 0)
-            doc.add_paragraph(st.session_state.plano)
-            buf = io.BytesIO()
-            doc.save(buf)
-            st.download_button("📥 Baixar em Word", buf.getvalue(), f"Plano_{tema}.docx")
-
-# --- ABA: BIBLIOTECA ---
-with abas[1]:
-    col_l, col_v = st.columns([1, 2])
-    with col_l:
-        for c in CLASSES:
-            with st.expander(f"📁 {c}"):
-                arquivos = os.listdir(os.path.join(BASE_DIR, c))
-                for arq in arquivos:
-                    if st.button(f"📖 {arq}", key=f"ver_{c}_{arq}"):
-                        with open(os.path.join(BASE_DIR, c, arq), "rb") as f:
-                            st.session_state.pdf_ativo = f.read()
-                            st.session_state.nome_ativo = arq
-    with col_v:
-        if "pdf_ativo" in st.session_state and st.session_state.pdf_ativo:
-            st.write(f"Vendo: {st.session_state.nome_ativo}")
-            pdf_viewer(input=st.session_state.pdf_ativo, width=700)
 
 # --- ABA: GERENCIAR (SÓ PARA ADMIN) ---
 if is_gerente:
@@ -988,6 +948,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

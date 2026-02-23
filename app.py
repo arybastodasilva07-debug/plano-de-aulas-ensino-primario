@@ -4,21 +4,21 @@ import os
 from openai import OpenAI
 from docx import Document
 import io
-import smtplib
-from email.mime.text import MIMEText
 import random
 import string
+import urllib.parse
 
 # ---------------- CONFIGURAÇÃO ----------------
 st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
 st.title("🇦🇴 SISTEMA PROFISSIONAL DE ELABORAÇÃO DE PLANO DE AULA")
 st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 
-# Estilo para esconder o botão nativo de "Manage App" e o menu para usuários
+# Estilo para esconder menus nativos e limpar a interface
 st.markdown("""
     <style>
     .stAppDeployButton {display:none;}
     footer {visibility: hidden;}
+    [data-testid="stHeader"] {background: rgba(0,0,0,0);}
     </style>
     """, unsafe_allow_html=True)
 
@@ -26,35 +26,20 @@ st.markdown("""
 def gerar_codigo():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
-def enviar_email_notificacao(email_do_professor, codigo_gerado):
-    try:
-        remetente = st.secrets["EMAIL_REMETENTE"]
-        senha_app = st.secrets["EMAIL_SENHA"]
-        corpo = f"NOVA SOLICITAÇÃO DE ACESSO\n\nProfessor: {email_do_professor}\nCódigo Gerado: {codigo_gerado}"
-        msg = MIMEText(corpo)
-        msg['Subject'] = f"🔔 Novo Pedido de Acesso: {email_do_professor}"
-        msg['From'] = remetente
-        msg['To'] = remetente
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-            server.login(remetente, senha_app)
-            server.send_message(msg)
-        return True
-    except:
-        return False
-
-# ---------------- 3. SISTEMA DE LOGIN (BLOQUEIO) ----------------
+# ---------------- 3. SISTEMA DE LOGIN ----------------
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
 
 if not st.session_state.autenticado:
     st.title("🇦🇴 Portal Pedagógico - Angola")
-    tab_login, tab_solicitar = st.tabs(["🔐 Entrar", "🔑 Gerar Senha / Solicitar"])
+    tab_login, tab_solicitar = st.tabs(["🔐 Entrar", "🔑 Solicitar Acesso / Gerar Senha"])
 
     with tab_login:
         email_in = st.text_input("E-mail Google").strip().lower()
         pass_in = st.text_input("Chave de Acesso", type="password").strip()
         if st.button("Validar Entrada"):
             try:
+                # Verifica nos Secrets a lista [PASSWORDS]
                 if email_in in st.secrets["PASSWORDS"] and pass_in == str(st.secrets["PASSWORDS"][email_in]):
                     st.session_state.autenticado = True
                     st.session_state.user_email = email_in
@@ -65,22 +50,38 @@ if not st.session_state.autenticado:
                 st.error("Erro: A lista de passwords não foi configurada nos Secrets.")
 
     with tab_solicitar:
-        st.subheader("Solicitar Novo Acesso")
-        email_novo = st.text_input("Seu e-mail para contacto")
-        if st.button("Enviar Pedido ao Gerente"):
+        st.subheader("Solicitar Nova Chave")
+        st.write("Clique no botão abaixo para gerar o seu pedido e enviá-lo via WhatsApp ao Administrador Ary Basto.")
+        
+        email_novo = st.text_input("Introduza o seu e-mail para registo")
+        
+        if email_novo:
             if "@" in email_novo:
-                with st.spinner("Processando..."):
-                    cod_sugerido = gerar_codigo()
-                    if enviar_email_notificacao(email_novo, cod_sugerido):
-                        st.success("✅ Pedido enviado! O gerente Ary Basto entrará em contacto.")
-                    else:
-                        st.error("❌ Erro ao enviar. Verifique as credenciais de e-mail nos Secrets.")
+                cod_sugerido = gerar_codigo()
+                
+                # Criar a mensagem para o WhatsApp
+                texto_whatsapp = f"Olá Ary Basto! Sou o professor(a) {email_novo}. Gostaria de adquirir o acesso ao Portal de Planos de Aula. Código de Referência: {cod_sugerido}"
+                texto_url = urllib.parse.quote(texto_whatsapp)
+                
+                # Substitua pelo seu número real (exemplo: 244900000000)
+                seu_numero = "244923000000" # <--- MUDE PARA O SEU NÚMERO AQUI
+                
+                link_wa = f"https://wa.me/{seu_numero}?text={texto_url}"
+                
+                st.info(f"O seu código gerado é: **{cod_sugerido}**")
+                st.markdown(f"""
+                    <a href="{link_wa}" target="_blank">
+                        <button style="background-color: #25D366; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                            📱 Enviar Pedido via WhatsApp
+                        </button>
+                    </a>
+                """, unsafe_allow_html=True)
             else:
-                st.warning("Insira um e-mail válido.")
-    st.stop() # INTERROMPE O SCRIPT AQUI SE NÃO LOGADO
+                st.warning("Por favor, introduza um e-mail válido para gerar o link.")
+    st.stop()
 
 # ---------------- 4. CONFIGURAÇÃO PÓS-LOGIN ----------------
-# Identificar se é o administrador
+# Se chegou aqui, o login foi um sucesso
 is_gerente = (st.session_state.user_email == st.secrets["ADMIN_EMAIL"].strip())
 
 # Configurar pastas da biblioteca
@@ -93,7 +94,6 @@ for c in CLASSES:
 # ---------------- 5. INTERFACE PRINCIPAL ----------------
 st.title("🇦🇴 Painel Pedagógico Profissional")
 
-# Barra Lateral
 with st.sidebar:
     st.header("⚙️ Opções")
     st.write(f"Usuário: **{st.session_state.user_email}**")
@@ -102,7 +102,7 @@ with st.sidebar:
         st.session_state.autenticado = False
         st.rerun()
 
-# Abas Dinâmicas (Gerente vê a aba de Upload)
+# Abas Dinâmicas
 titulos_abas = ["📝 GERADOR", "📚 BIBLIOTECA"]
 if is_gerente: titulos_abas.append("📂 GERENCIAR ARQUIVOS")
 abas = st.tabs(titulos_abas)
@@ -114,22 +114,22 @@ with abas[0]:
     with col_a:
         disciplina = st.text_input("Disciplina")
         tema = st.text_input("Tema da Aula")
-        classe = st.selectbox("Classe", CLASSES[:-1])
+        classe_sel = st.selectbox("Classe", CLASSES[:-1])
         if st.button("✨ Gerar Plano"):
             with st.spinner("IA a trabalhar..."):
                 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-                prompt = f"Crie um plano de aula para Angola. Disciplina: {disciplina}, Tema: {tema}, Classe: {classe}."
+                prompt = f"Crie um plano de aula detalhado para Angola seguindo o modelo do INIDE. Disciplina: {disciplina}, Tema: {tema}, Classe: {classe_sel}."
                 resp = client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": prompt}])
                 st.session_state.plano = resp.choices[0].message.content
     with col_b:
         if "plano" in st.session_state:
             st.markdown(st.session_state.plano)
-            # Botão de download Word
             doc = Document()
+            doc.add_heading(f"Plano de Aula - {tema}", 0)
             doc.add_paragraph(st.session_state.plano)
             buf = io.BytesIO()
             doc.save(buf)
-            st.download_button("📥 Baixar Word", buf.getvalue(), f"Plano_{tema}.docx")
+            st.download_button("📥 Baixar em Word", buf.getvalue(), f"Plano_{tema}.docx")
 
 # --- ABA: BIBLIOTECA ---
 with abas[1]:
@@ -147,8 +147,6 @@ with abas[1]:
         if "pdf_ativo" in st.session_state and st.session_state.pdf_ativo:
             st.write(f"Vendo: {st.session_state.nome_ativo}")
             pdf_viewer(input=st.session_state.pdf_ativo, width=700)
-        else:
-            st.info("Selecione um arquivo à esquerda.")
 
 # --- ABA: GERENCIAR (SÓ PARA ADMIN) ---
 if is_gerente:
@@ -164,14 +162,15 @@ if is_gerente:
                 st.success("Arquivo salvo!")
         with col_del:
             st.subheader("🗑️ Apagar Arquivos")
-            # Lista arquivos para apagar (exemplo simples)
             target_del = st.selectbox("Pasta para Limpar:", CLASSES)
             f_list = os.listdir(os.path.join(BASE_DIR, target_del))
             f_to_del = st.selectbox("Ficheiro:", f_list) if f_list else None
             if f_to_del and st.button("Eliminar Permanentemente"):
                 os.remove(os.path.join(BASE_DIR, target_del, f_to_del))
                 st.rerun()
-    
+
+
+
 # --- SISTEMA DE ARMAZENAMENTO PERMANENTE ---
 # Criar a pasta base se não existir
 BASE_DIR = "biblioteca_permanente"
@@ -989,6 +988,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

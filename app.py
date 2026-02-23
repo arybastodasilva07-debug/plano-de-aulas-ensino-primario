@@ -166,34 +166,54 @@ with abas[0]:
     st.header("📝 Gerador de Planos de Aula")
     # Seu código do gerador aqui...
 
-# --- ABA 2: CENTRAL DE DOCUMENTOS (Visualização para todos) ---
+# --- ABA 2: CENTRAL DE DOCUMENTOS ---
 with abas[1]:
     st.header("📂 Central de Documentos Oficiais")
-    # Caminho exato: biblioteca_permanente/Central_Documentos
     caminho_central = os.path.join(BASE_DIR, FOLDER_DOCS)
     
-    if not os.path.exists(caminho_central):
-        os.makedirs(caminho_central)
-
     for categoria, subcategorias in ESTRUTURA_DOCS.items():
         with st.expander(f"📁 {categoria.upper()}"):
             caminho_cat = os.path.join(caminho_central, categoria)
-            os.makedirs(caminho_cat, exist_ok=True) # Garante que a pasta existe ao abrir
+            os.makedirs(caminho_cat, exist_ok=True)
             
-            # Lógica para subpastas (Classes)
             if subcategorias:
                 for sub in subcategorias:
                     st.markdown(f"**📍 {sub}**")
                     c_sub = os.path.join(caminho_cat, sub)
                     os.makedirs(c_sub, exist_ok=True)
                     arquivos = os.listdir(c_sub)
+                    
+                    if not arquivos:
+                        st.caption("Nenhum arquivo nesta subpasta.")
+                    
                     for f in arquivos:
-                        # ... (seu código de botão de download e lixeira)
-            else:
-                # Lógica para pastas simples
+                        # ESTE É O CONTEÚDO QUE DEVE ESTAR DENTRO DO FOR
+                        col_arq, col_down, col_del = st.columns([3, 1, 0.5])
+                        with open(os.path.join(c_sub, f), "rb") as file_bytes:
+                            btn_data = file_bytes.read()
+                        col_arq.write(f"📄 {f}")
+                        col_down.download_button("📥 Baixar", btn_data, file_name=f, key=f"dwn_{categoria}_{sub}_{f}")
+                        if is_gerente:
+                            if col_del.button("🗑️", key=f"del_{categoria}_{sub}_{f}"):
+                                os.remove(os.path.join(c_sub, f))
+                                st.rerun()
+            
+            else: # Este é o ELSE da linha 192 que deu erro
                 arquivos = os.listdir(caminho_cat)
+                if not arquivos:
+                    st.caption("Nenhum arquivo disponível aqui.")
+                
                 for f in arquivos:
-                    # ... (seu código de botão de download e lixeira)
+                    # CONTEÚDO DO FOR PARA PASTAS SIMPLES
+                    col_arq, col_down, col_del = st.columns([3, 1, 0.5])
+                    with open(os.path.join(caminho_cat, f), "rb") as file_bytes:
+                        btn_data = file_bytes.read()
+                    col_arq.write(f"📄 {f}")
+                    col_down.download_button("📥 Baixar", btn_data, file_name=f, key=f"dwn_{categoria}_{f}")
+                    if is_gerente:
+                        if col_del.button("🗑️", key=f"del_{categoria}_{f}"):
+                            os.remove(os.path.join(caminho_cat, f))
+                            st.rerun()
 
 # --- ABA 3: LIVROS POR CLASSE (Visualização para todos) ---
 with abas[2]:
@@ -997,6 +1017,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

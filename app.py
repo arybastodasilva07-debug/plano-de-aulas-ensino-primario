@@ -104,7 +104,7 @@ with tab_documentos:
                 st.success("Documento geral guardado!")
 
     with col_u2:
-        st.subheader("Documentos Gerais Guardados")
+        st.subheader("Documentos Gerais")
         arquivos_gerais = os.listdir(DOCS_GERAIS_DIR)
         if arquivos_gerais:
             for arq in arquivos_gerais:
@@ -122,7 +122,7 @@ with tab_documentos:
 
 # --- JANELA 3: LIVROS (Organização por Classe) ---
 with tab_livros:
-    st.header("📚 Biblioteca Digital")
+    st.header("📚 Biblioteca Digital (Manuais INIDE)")
     
     col_lista, col_visor = st.columns([1, 2])
     
@@ -856,6 +856,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

@@ -257,24 +257,33 @@ if is_gerente:
 
         if st.button("🚀 Confirmar e Salvar no Portal"):
             if arquivo_upload is not None:
-                # Construção do caminho final
-                if destino_cat in CLASSES_NOMES:
-                    # Se for para a aba "Livros por Classe"
-                    caminho_final = os.path.join(BASE_DIR, destino_cat, arquivo_upload.name)
+                # 1. Construção do caminho final
+                if destino_cat in CLASSES:
+                    # Caminho para a Aba "Livros por Classe"
+                    diretorio_destino = os.path.join(BASE_DIR, destino_cat)
                 else:
-                    # Se for para a "Central de Documentos"
+                    # Caminho para a "Central de Documentos"
                     if subpasta_alvo:
-                        caminho_final = os.path.join(BASE_DIR, "Central_Documentos", destino_cat, subpasta_alvo, arquivo_upload.name)
+                        diretorio_destino = os.path.join(BASE_DIR, "Central_Documentos", destino_cat, subpasta_alvo)
                     else:
-                        caminho_final = os.path.join(BASE_DIR, "Central_Documentos", destino_cat, arquivo_upload.name)
+                        diretorio_destino = os.path.join(BASE_DIR, "Central_Documentos", destino_cat)
 
-                # Salvar o ficheiro fisicamente
-                with open(caminho_final, "wb") as f:
-                    f.write(arquivo_upload.getbuffer())
-                
-                st.success(f"✅ Sucesso! O ficheiro '{arquivo_upload.name}' foi guardado em: {destino_cat} {'/' + subpasta_alvo if subpasta_alvo else ''}")
-                st.balloons()
-                st.rerun()
+                # 2. VERIFICAÇÃO CRÍTICA: Criar a pasta se ela não existir
+                if not os.path.exists(diretorio_destino):
+                    os.makedirs(diretorio_destino)
+
+                caminho_final = os.path.join(diretorio_destino, arquivo_upload.name)
+
+                # 3. Salvar o ficheiro
+                try:
+                    with open(caminho_final, "wb") as f:
+                        f.write(arquivo_upload.getbuffer())
+                    
+                    st.success(f"✅ Sucesso! O ficheiro '{arquivo_upload.name}' foi guardado.")
+                    st.balloons()
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Erro ao gravar o ficheiro: {e}")
             else:
                 st.warning("⚠️ Por favor, selecione um ficheiro antes de confirmar.")
 
@@ -1016,6 +1025,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

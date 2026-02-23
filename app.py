@@ -128,7 +128,7 @@ else:
 # =========================
 
 if is_gerente
-    with tab_gerente:
+    with tab_gerent:
 
         st.title("⚙ Gestão do Portal")
 
@@ -995,6 +995,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

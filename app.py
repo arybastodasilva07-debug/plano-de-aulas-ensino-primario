@@ -50,7 +50,7 @@ if not st.session_state.autenticado:
                 st.session_state.user_email = email_in
                 st.rerun()
             else:
-                st.error("Código inválido. Solicite ao Administrador (Ary Basto).")
+                st.error("Código inválido. Solicite ao Administrador (Prof. António Basto).")
     st.stop()
 
 # Verificação de Perfil (Gerente)
@@ -65,49 +65,7 @@ if is_gerente:
 abas = st.tabs(abas_titulos)
 
 # --- ABA 0: GERADOR DE PLANOS (IA) ---
-with abas[0]:
-    st.header("📝 Criar Plano de Aula com IA")
-    col_in, col_out = st.columns([1, 1])
-    
-    with col_in:
-        st.subheader("Parâmetros da Aula")
-        disciplina = st.text_input("Disciplina", placeholder="Ex: Língua Portuguesa")
-        tema = st.text_input("Tema da Aula", placeholder="Ex: Substantivos Próprios")
-        classe_aula = st.selectbox("Classe", CLASSES)
-        objetivos = st.text_area("Objetivos Específicos (Opcional)")
-        
-        if st.button("✨ Gerar Plano Completo"):
-            if not disciplina or not tema:
-                st.warning("Por favor, preencha a disciplina e o tema.")
-            else:
-                with st.spinner("A IA está a redigir o plano segundo as normas do INIDE..."):
-                    try:
-                        prompt = f"""Crie um plano de aula detalhado para o sistema de ensino de Angola. 
-                        Disciplina: {disciplina}, Tema: {tema}, Classe: {classe_aula}. 
-                        Objetivos: {objetivos}. 
-                        Inclua: Objetivos Gerais, Conteúdo, Metodologia, Meios de Ensino e Avaliação."""
-                        
-                        response = client.chat.completions.create(
-                            model="gpt-4o", # Ou gpt-3.5-turbo
-                            messages=[{"role": "user", "content": prompt}]
-                        )
-                        st.session_state.plano_gerado = response.choices[0].message.content
-                    except Exception as e:
-                        st.error(f"Erro na IA: {e}")
 
-    with col_out:
-        st.subheader("Resultado do Plano")
-        if "plano_gerado" in st.session_state:
-            st.markdown(st.session_state.plano_gerado)
-            
-            # Botão para baixar em Word (DOCX)
-            doc = Document()
-            doc.add_heading(f"Plano de Aula - {disciplina}", 0)
-            doc.add_paragraph(st.session_state.plano_gerado)
-            buffer = io.BytesIO()
-            doc.save(buffer)
-            buffer.seek(0)
-            st.download_button("📥 Baixar em Word (.docx)", data=buffer, file_name=f"Plano_{tema}.docx")
 
 # --- ABA 1: BIBLIOTECA (APENAS VISUALIZAÇÃO) ---
 with abas[1]:
@@ -964,6 +922,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

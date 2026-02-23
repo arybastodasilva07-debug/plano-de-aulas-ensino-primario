@@ -1,10 +1,12 @@
 import streamlit as st
 from streamlit_pdf_viewer import pdf_viewer
 import os
+import io
 from openai import OpenAI
 import random
 import string
 import urllib.parse
+
 
 # ---------------- CONFIGURAÇÃO INICIAL ----------------
 st.set_page_config(page_title="Portal Pedagógico Angola", layout="wide")
@@ -1048,6 +1050,7 @@ if is_admin:
                     f.write(ficheiro.getbuffer())
 
                 st.success("Documento guardado com sucesso.")
+
 
 
 

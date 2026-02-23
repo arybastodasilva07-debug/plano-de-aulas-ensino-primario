@@ -14,7 +14,7 @@ st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 
 # --- 1. CONFIGURAÇÃO DE SEGURANÇA E PERFIS ---
 # Definimos quem é o administrador (você)
-ADMIN_USER = "arybastodasilva07email@gmail.com" 
+ADMIN_USER = "seu-email@gmail.com" 
 
 def verificar_acesso():
     if "autenticado" not in st.session_state:
@@ -889,6 +889,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

@@ -254,10 +254,6 @@ with tab_livros:
         else:
             st.info("Selecione um material à esquerda.")
 
-# --- BARRA LATERAL ---
-with st.sidebar:
-    st.title("⚙️ Dados da Aula")
-    # Coloque aqui o resto das suas seleções...
 
 # ======== NÃO MEXER ================= # NÃO MEXE # =========== NÃO MEXER ==============  CIMA
 
@@ -1198,6 +1194,7 @@ if is_admin:
                     f.write(ficheiro.getbuffer())
 
                 st.success("Documento guardado com sucesso.")
+
 
 
 

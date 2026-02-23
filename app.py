@@ -235,8 +235,6 @@ with abas[2]:
                         st.rerun()
 
 # --- ABA 4: GERENCIAR ARQUIVOS (EXCLUSIVA DO GERENTE) ---
-st.write(f"Caminho atual do servidor: {os.path.abspath(BASE_DIR)}")
-
 if is_gerente:
     with abas[3]:
         st.header("📂 Painel de Gestão de Conteúdo")
@@ -1017,6 +1015,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

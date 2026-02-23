@@ -25,38 +25,39 @@ def gerar_codigo():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
 # ---------------- LOGIN ----------------
-if "autenticado" not in st.session_state:
-    st.session_state.autenticado = False
 
-if not st.session_state.autenticado:
-    st.title("🔐 Portal Pedagógico - Angola")
-    tab_login, tab_solicitar = st.tabs(["Entrar", "Solicitar Acesso"])
+st.sidebar.title("🔐 Acesso ao Sistema")
 
-    with tab_login:
-        email_in = st.text_input("E-mail").strip().lower()
-        pass_in = st.text_input("Chave de Acesso", type="password").strip()
+perfil = st.sidebar.selectbox("Perfil", ["Professor", "Administrador"])
 
-        if st.button("Validar Entrada"):
-            try:
-                if email_in in st.secrets["PASSWORDS"] and pass_in == str(st.secrets["PASSWORDS"][email_in]):
-                    st.session_state.autenticado = True
-                    st.session_state.user_email = email_in
-                    st.rerun()
-                else:
-                    st.error("Dados incorretos.")
-            except:
-                st.error("Base de utilizadores não configurada nos Secrets.")
+is_admin = False
+dados_professor = {}
 
-    with tab_solicitar:
-        email_novo = st.text_input("Seu e-mail")
-        if email_novo and "@" in email_novo:
-            codigo = gerar_codigo()
-            msg = f"Olá! Sou o professor(a) {email_novo}. Código: {codigo}"
-            link = f"https://wa.me/244923000000?text={urllib.parse.quote(msg)}"
-            st.info(f"Código de referência: {codigo}")
-            st.markdown(f"[📱 Solicitar via WhatsApp]({link})")
+if perfil == "Administrador":
+    senha = st.sidebar.text_input("Senha Admin", type="password")
+    if senha == "admin123":
+        is_admin = True
+        st.sidebar.success("Acesso concedido")
+    elif senha:
+        st.sidebar.error("Senha incorreta")
 
-    st.stop()
+if perfil == "Professor":
+    st.sidebar.subheader("👤 Identificação do Professor")
+
+    nome_prof = st.sidebar.text_input("Nome Completo")
+    escola = st.sidebar.text_input("Escola")
+    municipio = st.sidebar.text_input("Município")
+    provincia = st.sidebar.text_input("Província")
+
+    dados_professor = {
+        "nome": nome_prof,
+        "escola": escola,
+        "municipio": municipio,
+        "provincia": provincia
+    }
+
+    st.sidebar.markdown("---")
+    st.sidebar.info("Perfil Professor activo")
 
 # ---------------- DEFINIÇÃO DE PERMISSÕES ----------------
 is_admin = False
@@ -95,12 +96,8 @@ tab_gerador, tab_biblioteca, tab_admin = st.tabs(
 
 # ---------------- GERADOR ----------------
 with tab_gerador:
-    st.header("Criar Plano com IA")
-
-    disc = st.text_input("Disciplina")
-    tema = st.text_input("Tema")
-    classe = st.selectbox("Classe", CLASSES[:-1])
-
+    st.header("Gerar Plano de Aula")
+,
     if st.button("Gerar Plano"):
         try:
             client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
@@ -870,6 +867,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

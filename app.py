@@ -115,7 +115,7 @@ if is_gerente: titulos_abas.append("📂 GERENCIAR ARQUIVOS")
 abas = st.tabs(titulos_abas)
 
 #---------Aba----------
-if is_admin:
+if is_gerente:
     tab_gerador, tab_biblioteca, tab_admin = st.tabs(
         ["Gerador de Planos", "Biblioteca Digital", "Gestão do Portal"]
     )
@@ -973,6 +973,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

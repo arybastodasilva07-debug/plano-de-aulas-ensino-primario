@@ -96,8 +96,13 @@ tab_gerador, tab_biblioteca, tab_admin = st.tabs(
 
 # ---------------- GERADOR ----------------
 with tab_gerador:
-    st.header("Gerar Plano de Aula")
-,
+    # Mostrar identificação no topo
+     if perfil == "Professor" and dados_professor.get("nome"):
+            st.markdown("### 👤 Dados do Professor")
+            st.write(f"**Nome:** {dados_professor['nome']}")
+            st.write(f"**Escola:** {dados_professor['escola']}")
+            st.write(f"**Município:** {dados_professor['municipio']}")
+            st.write(f"**Província:** {dados_professor['provincia']}")
     if st.button("Gerar Plano"):
         try:
             client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
@@ -867,6 +872,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

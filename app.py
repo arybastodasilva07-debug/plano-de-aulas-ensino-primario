@@ -14,97 +14,31 @@ st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
 st.title("🇦🇴 SISTEMA PROFISSIONAL DE ELABORAÇÃO DE PLANO DE AULA")
 st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 
-# --- 1. CONFIGURAÇÕES E SEGURANÇA ---
-st.set_page_config(page_title="Plano de Aula Angola - IA", layout="wide")
-
-try:
-    ADMIN_EMAIL = st.secrets["ADMIN_EMAIL"].strip()
-    CODIGO_MESTRE = st.secrets["CODIGO_MESTRE"].strip()
-    # Cliente OpenAI configurado com a sua chave secreta
-    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-except Exception as e:
-    st.error("Erro nos Secrets: Verifique se ADMIN_EMAIL, CODIGO_MESTRE e OPENAI_API_KEY estão no formato TOML.")
-    st.stop()
-
-# --- 2. GESTÃO DE PASTAS (PERSISTÊNCIA) ---
-BASE_DIR = "biblioteca_permanente"
-CLASSES = ["Iniciação", "1ª Classe", "2ª Classe", "3ª Classe", "4ª Classe", "5ª Classe", "6ª Classe"]
-if not os.path.exists(BASE_DIR): os.makedirs(BASE_DIR)
-for c in CLASSES:
-    p = os.path.join(BASE_DIR, c)
-    if not os.path.exists(p): os.makedirs(p)
-
-# --- 3. SISTEMA DE LOGIN ---
+# --- 3. CONTROLO DE SESSÃO E LOGIN (VERSÃO CORRIGIDA) ---
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
 
 if not st.session_state.autenticado:
-    st.title("🔐 Sistema de Gestão de Planos de Aula")
-    col1, col2 = st.columns(2)
-    with col1:
-        email_in = st.text_input("E-mail Google").strip()
-        code_in = st.text_input("Código de Ativação", type="password").strip()
-        if st.button("Entrar"):
-            if code_in == CODIGO_MESTRE:
+    st.title("🔐 Acesso ao Sistema")
+    
+    email_login = st.text_input("E-mail Google").strip() # .strip() remove espaços acidentais
+    codigo_login = st.text_input("Código de Ativação", type="password").strip()
+    
+    if st.button("Entrar no Sistema"):
+        # Verificamos se os campos não estão vazios
+        if not email_login or not codigo_login:
+            st.warning("Por favor, preencha todos os campos.")
+        else:
+            # Comparamos ignorando espaços extras
+            if codigo_login == st.secrets["CODIGO_MESTRE"].strip():
                 st.session_state.autenticado = True
-                st.session_state.user_email = email_in
+                st.session_state.user_email = email_login
+                st.success("Acesso autorizado!")
                 st.rerun()
             else:
-                st.error("Código inválido. Solicite ao Administrador (Prof. António Basto).")
+                st.error("Código incorreto.")
     st.stop()
-
-# Verificação de Perfil (Gerente)
-is_gerente = (st.session_state.user_email == ADMIN_EMAIL)
-
-# --- 4. INTERFACE E ABAS ---
-# A aba de gerenciamento só aparece para você
-abas_titulos = ["📝 Gerador de Planos", "📚 Biblioteca"]
-if is_gerente:
-    abas_titulos.append("⚙️ Gerenciar Aplicativo")
-
-abas = st.tabs(abas_titulos)
-
-# --- ABA 0: GERADOR DE PLANOS (IA) ---
-
-
-# --- ABA 1: BIBLIOTECA (APENAS VISUALIZAÇÃO) ---
-with abas[1]:
-    col_l, col_v = st.columns([1, 2])
-    with col_l:
-        st.subheader("Pastas de Manuais")
-        for c in CLASSES:
-            with st.expander(f"📁 {c}"):
-                arquivos = os.listdir(os.path.join(BASE_DIR, c))
-                for arq in arquivos:
-                    if st.button(f"📖 {arq}", key=f"ler_{c}_{arq}"):
-                        with open(os.path.join(BASE_DIR, c, arq), "rb") as f:
-                            st.session_state.pdf_dados = f.read()
-    with col_v:
-        if "pdf_dados" in st.session_state:
-            if st.button("❌ Fechar"): 
-                del st.session_state.pdf_dados
-                st.rerun()
-            pdf_viewer(input=st.session_state.pdf_dados, width=700)
-        else:
-            st.info("Selecione um manual à esquerda para ler.")
-
-# --- ABA 2: GERENCIAR (SÓ APARECE PARA O GERENTE) ---
-if is_gerente:
-    with abas[2]:
-        st.header("⚙️ Painel do Gerente (Ary Basto)")
-        st.subheader("Upload de Novos Manuais")
-        c_up = st.selectbox("Classe do Manual:", CLASSES, key="up_classe")
-        file_up = st.file_uploader("Selecione o PDF oficial", type="pdf")
-        
-        if file_up and st.button("💾 Salvar na Biblioteca"):
-            with open(os.path.join(BASE_DIR, c_up, file_up.name), "wb") as f:
-                f.write(file_up.getbuffer())
-            st.success(f"Manual {file_up.name} guardado com sucesso!")
-        
-        st.divider()
-        st.subheader("⚠️ Zona de Perigo")
-        st.write("Aqui você pode apagar manuais da biblioteca.")
-        # Lógica para listar e apagar arquivos se necessário
+    
 # --- SISTEMA DE ARMAZENAMENTO PERMANENTE ---
 # Criar a pasta base se não existir
 BASE_DIR = "biblioteca_permanente"
@@ -922,6 +856,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

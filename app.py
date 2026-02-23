@@ -87,6 +87,18 @@ if not st.session_state.autenticado:
 
 # ======== NÃO MEXER ================= # NÃO MEXE # =========== NÃO MEXER ==============
 
+# ---------------- 4. CONFIGURAÇÃO PÓS-LOGIN ----------------
+
+# Se chegou aqui, o login foi um sucesso
+is_gerente = (st.session_state.user_email == st.secrets["ADMIN_EMAIL"].strip())
+
+# Configurar pastas da biblioteca
+BASE_DIR = "biblioteca_permanente"
+CLASSES = ["Iniciação", "1ª Classe", "2ª Classe", "3ª Classe", "4ª Classe", "5ª Classe", "6ª Classe", "Gerais"]
+for c in CLASSES:
+    path = os.path.join(BASE_DIR, c)
+    if not os.path.exists(path): os.makedirs(path)
+
 # ========================= # ABAS # =========================
 
 if is_admin:
@@ -1183,6 +1195,7 @@ if is_admin:
                     f.write(ficheiro.getbuffer())
 
                 st.success("Documento guardado com sucesso.")
+
 
 
 

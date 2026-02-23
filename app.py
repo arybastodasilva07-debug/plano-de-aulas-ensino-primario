@@ -10,54 +10,84 @@ from docx import Document
 from docx.shared import Inches
 
 
-# ---------------- CONFIGURAÇÃO INICIAL ----------------
-st.set_page_config(page_title="Portal Pedagógico Angola", layout="wide")
-
+# ---------------- CONFIGURAÇÃO ----------------
+st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
 st.title("🇦🇴 SISTEMA PROFISSIONAL DE ELABORAÇÃO DE PLANO DE AULA")
 st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
 
-# =========================
-# LOGIN SIMPLES
-# =========================
+# Estilo para esconder menus nativos e limpar a interface
+st.markdown("""
+    <style>
+    .stAppDeployButton {display:none;}
+    footer {visibility: hidden;}
+    [data-testid="stHeader"] {background: rgba(0,0,0,0);}
+    </style>
+    """, unsafe_allow_html=True)
 
-st.sidebar.title("🔐 Acesso ao Sistema")
+# ---------------- 2. FUNÇÕES DE APOIO ----------------
+def gerar_codigo():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    
 
-perfil = st.sidebar.selectbox("Perfil", ["Professor", "Administrador"])
+# ======== NÃO MEXER ================= # NÃO MEXE # =========== NÃO MEXER ==============
 
-is_admin = False
+# ---------------- 3. SISTEMA DE LOGIN ----------------
+if "autenticado" not in st.session_state:
+    st.session_state.autenticado = False
 
-if perfil == "Administrador":
-    senha = st.sidebar.text_input("Senha Admin", type="password")
-    if senha == "admin123":  # ⚠ depois pode mudar
-        is_admin = True
-        st.sidebar.success("Acesso concedido")
-    elif senha:
-        st.sidebar.error("Senha incorreta")
+if not st.session_state.autenticado:
+    st.title("🇦🇴 Portal Pedagógico - Angola")
+    tab_login, tab_solicitar = st.tabs(["🔐 Entrar", "🔑 Solicitar Acesso / Gerar Senha"])
 
-# =========================
-# CURRÍCULO SIMPLES (MODELO)
-# =========================
+    with tab_login:
+        email_in = st.text_input("E-mail Google").strip().lower()
+        pass_in = st.text_input("Chave de Acesso", type="password").strip()
+        if st.button("Validar Entrada"):
+            try:
+                # Verifica nos Secrets a lista [PASSWORDS]
+                if email_in in st.secrets["PASSWORDS"] and pass_in == str(st.secrets["PASSWORDS"][email_in]):
+                    st.session_state.autenticado = True
+                    st.session_state.user_email = email_in
+                    st.rerun()
+                else:
+                    st.error("Credenciais inválidas. Verifique o e-mail e a chave.")
+            except:
+                st.error("Erro: A lista de passwords não foi configurada nos Secrets.")
 
-curriculo = {
-    "1ª Classe": {
-        "Matemática": {
-            "Números Naturais": [
-                "Leitura e escrita de números até 20",
-                "Contagem progressiva e regressiva"
-            ]
-        },
-        "Língua Portuguesa": {
-            "Alfabeto": [
-                "Identificação das letras",
-                "Formação de sílabas simples"
-            ]
-        }
-    }
-}
+    with tab_solicitar:
+        st.subheader("Solicitar Nova Chave")
+        st.write("Clique no botão abaixo para gerar o seu pedido e enviá-lo via WhatsApp ao Administrador António Basto.")
+        
+        email_novo = st.text_input("Introduza o seu e-mail para registo")
+        
+        if email_novo:
+            if "@" in email_novo:
+                cod_sugerido = gerar_codigo()
+                
+                # Criar a mensagem para o WhatsApp
+                texto_whatsapp = f"Olá António Basto! Sou o professor(a) {email_novo}. Gostaria de adquirir o acesso ao Portal de Planos de Aula. Código de Referência: {cod_sugerido}"
+                texto_url = urllib.parse.quote(texto_whatsapp)
+                
+                # Substitua pelo seu número real (exemplo: 244900000000)
+                seu_numero = "244948298246" # <--- MUDE PARA O SEU NÚMERO AQUI
+                
+                link_wa = f"https://wa.me/{seu_numero}?text={texto_url}"
+                
+                st.info(f"O seu código gerado é: **{cod_sugerido}**")
+                st.markdown(f"""
+                    <a href="{link_wa}" target="_blank">
+                        <button style="background-color: #25D366; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                            📱 Enviar Pedido via WhatsApp
+                        </button>
+                    </a>
+                """, unsafe_allow_html=True)
+            else:
+                st.warning("Por favor, introduza um e-mail válido para gerar o link.")
+    st.stop()
 
-# =========================
-# ABAS
-# =========================
+# ======== NÃO MEXER ================= # NÃO MEXE # =========== NÃO MEXER ==============
+
+# ========================= # ABAS # =========================
 
 if is_admin:
     tab_gerador, tab_biblioteca, tab_admin = st.tabs(
@@ -1153,6 +1183,7 @@ if is_admin:
                     f.write(ficheiro.getbuffer())
 
                 st.success("Documento guardado com sucesso.")
+
 
 
 

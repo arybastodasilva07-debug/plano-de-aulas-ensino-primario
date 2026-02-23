@@ -163,8 +163,9 @@ abas = st.tabs(titulos_abas)
 
 # --- ABA 1: GERADOR DE PLANOS (Acesso Total) ---
 with abas[0]:
-    st.header("📝 Gerador de Planos de Aula")
-    # Seu código do gerador aqui...
+    st.header("📝 Criar Novo Plano de Aula")
+    st.info("Configure os detalhes na barra lateral.")
+   
 
 # --- ABA 2: CENTRAL DE DOCUMENTOS ---
 with abas[1]:
@@ -285,6 +286,7 @@ if is_gerente:
 
 
 # --- SISTEMA DE ARMAZENAMENTO PERMANENTE ---
+
 # Criar a pasta base se não existir
 BASE_DIR = "biblioteca_permanente"
 if not os.path.exists(BASE_DIR):
@@ -1015,6 +1017,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

@@ -158,7 +158,7 @@ with tab_livros:
 
 # --- BARRA LATERAL ---
 with st.sidebar:
-    st.title("⚙️ Painel de Controle")
+    st.title("⚙️ Dados da Aula")
     # Coloque aqui o resto das suas seleções...
 
 # ---------------- OPENAI CLIENT ----------------
@@ -856,6 +856,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

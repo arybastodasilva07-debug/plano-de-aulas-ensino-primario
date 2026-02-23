@@ -101,17 +101,26 @@ for c in CLASSES:
 
 # ---------------- 5. INTERFACE PRINCIPAL ----------------
 with st.sidebar:
-    st.header("⚙️ Opções")
+    st.header("⚙️ MENU")
     st.write(f"Usuário: **{st.session_state.user_email}**")
     if is_gerente: st.success("Modo Gerente Ativo")
     if st.button("Sair do Sistema"):
         st.session_state.autenticado = False
         st.rerun()
 
-# Abas Dinâmicas
+
+# -----------Abas Dinâmicas----------------------------------------
 titulos_abas = ["📝 GERADOR", "📚 BIBLIOTECA"]
 if is_gerente: titulos_abas.append("📂 GERENCIAR ARQUIVOS")
 abas = st.tabs(titulos_abas)
+if is_admin:
+    tab_gerador, tab_biblioteca, tab_admin = st.tabs(
+        ["Gerador de Planos", "Biblioteca Digital", "Gestão do Portal"]
+    )
+else:
+    tab_gerador, tab_biblioteca = st.tabs(
+        ["Gerador de Planos", "Biblioteca Digital"]
+    )
 
 
 # --- ABA: GERENCIAR (SÓ PARA ADMIN) ---
@@ -1194,6 +1203,7 @@ if is_admin:
                     f.write(ficheiro.getbuffer())
 
                 st.success("Documento guardado com sucesso.")
+
 
 
 

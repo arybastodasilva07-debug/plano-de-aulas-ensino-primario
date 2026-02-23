@@ -123,6 +123,28 @@ else:
     tab_gerador, tab_biblioteca = st.tabs(
         ["Gerador de Planos", "Biblioteca Digital"]
     )
+# =========================
+# ABA ADMIN (PROTEGIDA)
+# =========================
+
+if is_gerente
+    with tab_gerente:
+
+        st.title("⚙ Gestão do Portal")
+
+        classe_destino = st.selectbox("Enviar Documento para Classe", CLASSES)
+        ficheiro = st.file_uploader("Carregar PDF", type="pdf")
+
+        if ficheiro and st.button("Salvar Documento"):
+            caminho = os.path.join(BASE_DIR, classe_destino, ficheiro.name)
+
+            if os.path.exists(caminho):
+                st.error("Já existe um documento com este nome.")
+            else:
+                with open(caminho, "wb") as f:
+                    f.write(ficheiro.getbuffer())
+
+                st.success("Documento guardado com sucesso.")
 
 
 # --- ABA: GERENCIAR (SÓ PARA ADMIN) ---
@@ -977,28 +999,7 @@ if gerar:
 
 
 
-# =========================
-# ABA ADMIN (PROTEGIDA)
-# =========================
 
-if is_admin:
-    with tab_admin:
-
-        st.title("⚙ Gestão do Portal")
-
-        classe_destino = st.selectbox("Enviar Documento para Classe", CLASSES)
-        ficheiro = st.file_uploader("Carregar PDF", type="pdf")
-
-        if ficheiro and st.button("Salvar Documento"):
-            caminho = os.path.join(BASE_DIR, classe_destino, ficheiro.name)
-
-            if os.path.exists(caminho):
-                st.error("Já existe um documento com este nome.")
-            else:
-                with open(caminho, "wb") as f:
-                    f.write(ficheiro.getbuffer())
-
-                st.success("Documento guardado com sucesso.")
 
 
 

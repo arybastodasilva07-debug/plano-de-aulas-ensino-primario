@@ -9,6 +9,9 @@ from openai import OpenAI
 from docx import Document
 from docx.shared import Inches
 
+# --- CONFIGURAÇÕES GLOBAIS (AQUI!) ---
+BASE_DIR = "biblioteca_permanente"
+FOLDER_DOCS = "Central_Documentos"
 
 # ---------------- CONFIGURAÇÃO ----------------
 st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
@@ -143,6 +146,7 @@ with st.sidebar:
 is_gerente = (st.session_state.user_email == st.secrets["ADMIN_EMAIL"].strip())
 
 # --- 5. ESTRUTURA DINÂMICA DE ABAS ---
+
 # Definimos as abas básicas que todos veem
 titulos_abas = [
     "📝 GERADOR DE PLANOS", 
@@ -165,56 +169,31 @@ with abas[0]:
 # --- ABA 2: CENTRAL DE DOCUMENTOS (Visualização para todos) ---
 with abas[1]:
     st.header("📂 Central de Documentos Oficiais")
-    st.info("Consulte ou baixe a documentação oficial do sistema de ensino.")
+    # Caminho exato: biblioteca_permanente/Central_Documentos
+    caminho_central = os.path.join(BASE_DIR, FOLDER_DOCS)
     
-    # Criamos um expander para cada categoria principal
+    if not os.path.exists(caminho_central):
+        os.makedirs(caminho_central)
+
     for categoria, subcategorias in ESTRUTURA_DOCS.items():
         with st.expander(f"📁 {categoria.upper()}"):
-            caminho_cat = os.path.join(BASE_DIR, "Documentos_Centrais", categoria)
+            caminho_cat = os.path.join(caminho_central, categoria)
+            os.makedirs(caminho_cat, exist_ok=True) # Garante que a pasta existe ao abrir
             
-            # Se a categoria tiver subpastas (como Programas e Dosificações)
+            # Lógica para subpastas (Classes)
             if subcategorias:
                 for sub in subcategorias:
                     st.markdown(f"**📍 {sub}**")
-                    caminho_sub = os.path.join(caminho_cat, sub)
-                    files = os.listdir(caminho_sub)
-                    if not files:
-                        st.caption("Nenhum arquivo nesta subpasta.")
-                    for f in files:
-                        col_arq, col_down, col_del = st.columns([3, 1, 0.5])
-                        with open(os.path.join(caminho_sub, f), "rb") as file_bytes:
-                            btn_data = file_bytes.read()
-                        
-                        col_arq.write(f"📄 {f}")
-                        # Botão de Download (Para todos)
-                        col_down.download_button("📥 Baixar", btn_data, file_name=f, key=f"down_{categoria}_{sub}_{f}")
-                        
-                        # Lixeira (Só Gerente)
-                        if is_gerente:
-                            if col_del.button("🗑️", key=f"del_{categoria}_{sub}_{f}"):
-                                os.remove(os.path.join(caminho_sub, f))
-                                st.rerun()
-                    st.divider()
-            
-            # Se for uma pasta simples (sem subpastas de classe)
+                    c_sub = os.path.join(caminho_cat, sub)
+                    os.makedirs(c_sub, exist_ok=True)
+                    arquivos = os.listdir(c_sub)
+                    for f in arquivos:
+                        # ... (seu código de botão de download e lixeira)
             else:
-                files = os.listdir(caminho_cat)
-                if not files:
-                    st.caption("Nenhum arquivo disponível aqui.")
-                for f in files:
-                    col_arq, col_down, col_del = st.columns([3, 1, 0.5])
-                    with open(os.path.join(caminho_cat, f), "rb") as file_bytes:
-                        btn_data = file_bytes.read()
-                    
-                    col_arq.write(f"📄 {f}")
-                    # Botão de Download (Para todos)
-                    col_down.download_button("📥 Baixar", btn_data, file_name=f, key=f"down_{categoria}_{f}")
-                    
-                    # Lixeira (Só Gerente)
-                    if is_gerente:
-                        if col_del.button("🗑️", key=f"del_{categoria}_{f}"):
-                            os.remove(os.path.join(caminho_cat, f))
-                            st.rerun()
+                # Lógica para pastas simples
+                arquivos = os.listdir(caminho_cat)
+                for f in arquivos:
+                    # ... (seu código de botão de download e lixeira)
 
 # --- ABA 3: LIVROS POR CLASSE (Visualização para todos) ---
 with abas[2]:
@@ -259,34 +238,25 @@ if is_gerente:
 
         if st.button("🚀 Confirmar e Salvar no Portal"):
             if arquivo_upload is not None:
-                # 1. Construção do caminho final
                 if destino_cat in CLASSES:
-                    # Caminho para a Aba "Livros por Classe"
+                    # Vai para a pasta de Livros (raiz da biblioteca)
                     diretorio_destino = os.path.join(BASE_DIR, destino_cat)
                 else:
-                    # Caminho para a "Central de Documentos"
+                    # Vai para a Central de Documentos usando a constante FOLDER_DOCS
                     if subpasta_alvo:
-                        diretorio_destino = os.path.join(BASE_DIR, "Central_Documentos", destino_cat, subpasta_alvo)
+                        diretorio_destino = os.path.join(BASE_DIR, FOLDER_DOCS, destino_cat, subpasta_alvo)
                     else:
-                        diretorio_destino = os.path.join(BASE_DIR, "Central_Documentos", destino_cat)
+                        diretorio_destino = os.path.join(BASE_DIR, FOLDER_DOCS, destino_cat)
 
-                # 2. VERIFICAÇÃO CRÍTICA: Criar a pasta se ela não existir
-                if not os.path.exists(diretorio_destino):
-                    os.makedirs(diretorio_destino)
-
-                caminho_final = os.path.join(diretorio_destino, arquivo_upload.name)
-
-                # 2. VERIFICAÇÃO E CRIAÇÃO
+                # CRIAÇÃO FÍSICA E GRAVAÇÃO
                 os.makedirs(diretorio_destino, exist_ok=True)
                 caminho_final = os.path.join(diretorio_destino, arquivo_upload.name)
-
-                # 3. GRAVAÇÃO FORÇADA
+                
                 with open(caminho_final, "wb") as f:
                     f.write(arquivo_upload.getbuffer())
                 
-                # 4. LIMPEZA DE CACHE (Para o Streamlit "ver" o ficheiro novo)
-                st.cache_data.clear() 
-                st.success(f"✅ Guardado em: {diretorio_destino}")
+                st.cache_data.clear() # Limpa o cache para forçar a leitura do novo ficheiro
+                st.success(f"✅ Ficheiro disponível em: {destino_cat}")
                 st.rerun()
 
         st.divider()
@@ -1027,6 +997,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

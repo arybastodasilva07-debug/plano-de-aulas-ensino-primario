@@ -213,100 +213,6 @@ if 'pdf_ativo' not in st.session_state:
 if 'nome_ativo' not in st.session_state:
     st.session_state.nome_ativo = None
 
-# --- ESTRUTURA DE ABAS (IDÊNTICA À ANTERIOR) ---
-tab_gerador, tab_documentos, tab_livros = st.tabs([
-    "📝 GERADOR DE PLANOS", 
-    "📂 CENTRAL DE DOCUMENTOS", 
-    "📚 LIVROS POR CLASSE"
-])
-
-# --- JANELA 1: GERADOR ---
-with tab_gerador:
-    st.header("📝 Criar Novo Plano de Aula")
-    st.info("Configure os detalhes na barra lateral.")
-
-# --- JANELA 2: CENTRAL DE DOCUMENTOS (Upload Permanente) ---
-with tab_documentos:
-    st.header("📂 Área de Upload")
-    
-    col_u1, col_u2 = st.columns([1, 1])
-    
-    with col_u1:
-        st.subheader("Submeter Novo Arquivo")
-        tipo = st.radio("Destino:", ["Livro Escolar", "Documento Geral"])
-        
-        if tipo == "Livro Escolar":
-            c_alvo = st.selectbox("Classe:", CLASSES)
-            u_file = st.file_uploader("Carregar PDF do Livro", type="pdf", key="up_livro")
-            if u_file and st.button("Salvar na Biblioteca"):
-                # Salva o arquivo fisicamente na pasta da classe
-                caminho = os.path.join(BASE_DIR, c_alvo, u_file.name)
-                with open(caminho, "wb") as f:
-                    f.write(u_file.getbuffer())
-                st.success(f"Livro '{u_file.name}' guardado permanentemente!")
-        
-        else:
-            u_doc = st.file_uploader("Carregar PDF Geral", type="pdf", key="up_doc")
-            if u_doc and st.button("Salvar Documento Geral"):
-                # Salva o arquivo fisicamente na pasta Geral
-                caminho = os.path.join(DOCS_GERAIS_DIR, u_doc.name)
-                with open(caminho, "wb") as f:
-                    f.write(u_doc.getbuffer())
-                st.success("Documento geral guardado!")
-
-    with col_u2:
-        st.subheader("Documentos Gerais")
-        arquivos_gerais = os.listdir(DOCS_GERAIS_DIR)
-        if arquivos_gerais:
-            for arq in arquivos_gerais:
-                col_btn, col_del = st.columns([3, 1])
-                if col_btn.button(f"👁️ Abrir {arq}", key=f"v_doc_{arq}"):
-                    with open(os.path.join(DOCS_GERAIS_DIR, arq), "rb") as f:
-                        st.session_state.pdf_ativo = f.read()
-                        st.session_state.nome_ativo = arq
-                # Opção para você como gestor apagar
-                if col_del.button("🗑️", key=f"del_doc_{arq}"):
-                    os.remove(os.path.join(DOCS_GERAIS_DIR, arq))
-                    st.rerun()
-        else:
-            st.write("Nenhum documento na base de dados.")
-
-# --- JANELA 3: LIVROS (Organização por Classe) ---
-with tab_livros:
-    st.header("📚 Biblioteca Digital (Manuais INIDE)")
-    
-    col_lista, col_visor = st.columns([1, 2])
-    
-    with col_lista:
-        st.subheader("Classes")
-        for classe in CLASSES:
-            with st.expander(f"📁 {classe}"):
-                arquivos_classe = os.listdir(os.path.join(BASE_DIR, classe))
-                if not arquivos_classe:
-                    st.caption("Sem livros nesta pasta.")
-                for arq in arquivos_classe:
-                    c_btn, c_del = st.columns([4, 1])
-                    if c_btn.button(f"📖 {arq}", key=f"liv_{classe}_{arq}"):
-                        with open(os.path.join(BASE_DIR, classe, arq), "rb") as f:
-                            st.session_state.pdf_ativo = f.read()
-                            st.session_state.nome_ativo = arq
-                    # Botão para apagar (Gestor)
-                    if c_del.button("🗑️", key=f"del_{classe}_{arq}"):
-                        os.remove(os.path.join(BASE_DIR, classe, arq))
-                        st.rerun()
-    
-    with col_visor:
-        st.subheader("🖥️ Leitor Online")
-        if st.session_state.pdf_ativo is not None:
-            st.write(f"**Lendo:** {st.session_state.nome_ativo}")
-            if st.button("❌ Fechar Leitor"):
-                st.session_state.pdf_ativo = None
-                st.rerun()
-            
-            pdf_viewer(input=st.session_state.pdf_ativo, width=700)
-        else:
-            st.info("Selecione um material à esquerda.")
-
 
 # ======== NÃO MEXER ================= # NÃO MEXE # =========== NÃO MEXER ==============  CIMA
 
@@ -1015,6 +921,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

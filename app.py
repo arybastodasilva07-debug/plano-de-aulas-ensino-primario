@@ -109,65 +109,85 @@ with st.sidebar:
         st.rerun()
 
 
-# -----------Abas Dinâmicas----------------------------------------
-titulos_abas = ["📝 GERADOR", "📚 BIBLIOTECA"]
-if is_gerente: titulos_abas.append("📂 GERENCIAR ARQUIVOS")
+# --- 4. DEFINIÇÃO DE PERMISSÕES ---
+# Verifica se o e-mail logado é o do administrador definido nos Secrets
+is_gerente = (st.session_state.user_email == st.secrets["ADMIN_EMAIL"].strip())
+
+# --- 5. ESTRUTURA DINÂMICA DE ABAS ---
+# Definimos as abas básicas que todos veem
+titulos_abas = [
+    "📝 GERADOR DE PLANOS", 
+    "📂 CENTRAL DE DOCUMENTOS", 
+    "📚 LIVROS POR CLASSE"
+]
+
+# Se for o gerente, adicionamos a quarta aba de controle
+if is_gerente:
+    titulos_abas.append("📂 GERENCIAR ARQUIVOS")
+
+# Criamos as abas fisicamente no Streamlit
 abas = st.tabs(titulos_abas)
 
-#---------Aba----------
-if is_gerente:
-    tab_gerador, tab_biblioteca, tab_admin = st.tabs(
-        ["Gerador de Planos", "Biblioteca Digital", "Gestão do Portal"]
-    )
-else:
-    tab_gerador, tab_biblioteca = st.tabs(
-        ["Gerador de Planos", "Biblioteca Digital"]
-    )
-# =========================
-# ABA ADMIN (PROTEGIDA)
-# =========================
+# --- ABA 1: GERADOR DE PLANOS (Acesso Total) ---
+with abas[0]:
+    st.header("📝 Gerador de Planos de Aula")
+    # Seu código do gerador aqui...
 
-if is_gerente:
-    with tab_gerente:
-
-        st.title("⚙ Gestão do Portal")
-
-        classe_destino = st.selectbox("Enviar Documento para Classe", CLASSES)
-        ficheiro = st.file_uploader("Carregar PDF", type="pdf")
-
-        if ficheiro and st.button("Salvar Documento"):
-            caminho = os.path.join(BASE_DIR, classe_destino, ficheiro.name)
-
-            if os.path.exists(caminho):
-                st.error("Já existe um documento com este nome.")
-            else:
-                with open(caminho, "wb") as f:
-                    f.write(ficheiro.getbuffer())
-
-                st.success("Documento guardado com sucesso.")
-
-
-# --- ABA: GERENCIAR (SÓ PARA ADMIN) ---
-if is_gerente:
-    with abas[2]:
-        st.header("📂 Gestão de Ficheiros")
-        col_up, col_del = st.columns(2)
-        with col_up:
-            target = st.selectbox("Pasta Destino:", CLASSES)
-            up_f = st.file_uploader("Upload PDF", type="pdf")
-            if up_f and st.button("Confirmar Upload"):
-                with open(os.path.join(BASE_DIR, target, up_f.name), "wb") as f:
-                    f.write(up_f.getbuffer())
-                st.success("Arquivo salvo!")
-        with col_del:
-            st.subheader("🗑️ Apagar Arquivos")
-            target_del = st.selectbox("Pasta para Limpar:", CLASSES)
-            f_list = os.listdir(os.path.join(BASE_DIR, target_del))
-            f_to_del = st.selectbox("Ficheiro:", f_list) if f_list else None
-            if f_to_del and st.button("Eliminar Permanentemente"):
-                os.remove(os.path.join(BASE_DIR, target_del, f_to_del))
+# --- ABA 2: CENTRAL DE DOCUMENTOS (Visualização para todos) ---
+with abas[1]:
+    st.header("📂 Central de Documentos Gerais")
+    arquivos_gerais = os.listdir(os.path.join(BASE_DIR, "Gerais"))
+    
+    for arq in arquivos_gerais:
+        col_txt, col_del = st.columns([4, 1])
+        
+        if col_txt.button(f"👁️ Abrir {arq}", key=f"btn_geral_{arq}"):
+            with open(os.path.join(BASE_DIR, "Gerais", arq), "rb") as f:
+                st.session_state.pdf_ativo = f.read()
+        
+        # BLOQUEIO: Só o gerente vê o botão de apagar
+        if is_gerente:
+            if col_del.button("🗑️", key=f"del_geral_{arq}"):
+                os.remove(os.path.join(BASE_DIR, "Gerais", arq))
                 st.rerun()
 
+# --- ABA 3: LIVROS POR CLASSE (Visualização para todos) ---
+with abas[2]:
+    st.header("📚 Livros por Classe")
+    for classe in CLASSES[:-1]: # Itera pelas classes
+        with st.expander(f"📁 {classe}"):
+            arquivos = os.listdir(os.path.join(BASE_DIR, classe))
+            for arq in arquivos:
+                c1, c2 = st.columns([4, 1])
+                
+                if c1.button(f"📖 {arq}", key=f"btn_livro_{classe}_{arq}"):
+                    with open(os.path.join(BASE_DIR, classe, arq), "rb") as f:
+                        st.session_state.pdf_ativo = f.read()
+                
+                # BLOQUEIO: Só o gerente pode remover manuais
+                if is_gerente:
+                    if c2.button("🗑️", key=f"del_livro_{classe}_{arq}"):
+                        os.remove(os.path.join(BASE_DIR, classe, arq))
+                        st.rerun()
+
+# --- ABA 4: GERENCIAR ARQUIVOS (EXCLUSIVA DO GERENTE) ---
+# Usamos um 'try/except' ou verificamos o índice para evitar erros se a aba não existir para o professor
+if is_gerente:
+    with abas[3]:
+        st.header("📂 Painel de Gerência (Upload)")
+        st.info("Utilize esta área para alimentar a biblioteca do portal.")
+        
+        col_up1, col_up2 = st.columns(2)
+        with col_up1:
+            destino = st.selectbox("Escolha o destino do arquivo:", CLASSES)
+            arquivo_novo = st.file_uploader("Selecione o PDF", type="pdf")
+            
+            if arquivo_novo and st.button("🚀 Confirmar Upload"):
+                caminho_final = os.path.join(BASE_DIR, destino, arquivo_novo.name)
+                with open(caminho_final, "wb") as f:
+                    f.write(arquivo_novo.getbuffer())
+                st.success(f"Arquivo '{arquivo_novo.name}' salvo em {destino}!")
+                st.rerun()
 
 
 # --- SISTEMA DE ARMAZENAMENTO PERMANENTE ---
@@ -995,6 +1015,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

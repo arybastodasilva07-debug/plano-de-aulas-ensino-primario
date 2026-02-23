@@ -140,169 +140,10 @@ if is_gerente:
 # ======== NÃO MEXER ================= # NÃO MEXE # =========== NÃO MEXER ==============  CIMA
 
 
-# ========================= # ABAS # =========================
 
-if is_admin:
-    tab_gerador, tab_biblioteca, tab_admin = st.tabs(
-        ["Gerador de Planos", "Biblioteca Digital", "Gestão do Portal"]
-    )
-else:
-    tab_gerador, tab_biblioteca = st.tabs(
-        ["Gerador de Planos", "Biblioteca Digital"]
-    )
-
-# =========================
-# ABA GERADOR
-# =========================
-
-with tab_gerador:
-
-    st.title("📘 Gerador Inteligente de Plano de Aula")
-
-    classe = st.selectbox("Classe", list(curriculo.keys()))
-    disciplina = st.selectbox("Disciplina", list(curriculo[classe].keys()))
-
-    temas = list(curriculo[classe][disciplina].keys())
-    tema = st.selectbox("Tema", temas)
-
-    conteudo_tema = curriculo[classe][disciplina][tema]
-
-    if isinstance(conteudo_tema, dict):
-        subtemas = list(conteudo_tema.keys())
-        subtema = st.selectbox("Subtema", subtemas)
-        conteudo_subtema = conteudo_tema[subtema]
-
-        if isinstance(conteudo_subtema, list):
-            sumario = st.selectbox("Sumário", conteudo_subtema)
-        else:
-            sumario = subtema
-    else:
-        sumario = st.selectbox("Sumário", conteudo_tema)
-
-    api_key = st.text_input("Chave OpenAI (opcional)", type="password")
-
-    if st.button("Gerar Plano de Aula"):
-
-        if api_key:
-            client = OpenAI(api_key=api_key)
-
-            prompt = f"""
-            Crie um plano de aula completo para:
-            Classe: {classe}
-            Disciplina: {disciplina}
-            Tema: {tema}
-            Sumário: {sumario}
-
-            Estrutura:
-            - Objectivo Geral
-            - Objectivos Específicos
-            - Metodologia
-            - Recursos
-            - Avaliação
-            """
-
-            resposta = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "user", "content": prompt}]
-            )
-
-            plano = resposta.choices[0].message.content
-
-        else:
-            plano = f"""
-PLANO DE AULA
-
-Classe: {classe}
-Disciplina: {disciplina}
-Tema: {tema}
-Sumário: {sumario}
-
-Objectivo Geral:
-Desenvolver competências relacionadas ao tema.
-
-Objectivos Específicos:
-- Compreender o conteúdo.
-- Aplicar o conhecimento em exercícios.
-
-Metodologia:
-Aula participativa com exemplos práticos.
-
-Recursos:
-Quadro, livro, caderno.
-
-Avaliação:
-Participação e exercícios práticos.
-"""
-
-        st.text_area("Plano Gerado", plano, height=400)
-
-        # Gerar Word
-        doc = Document()
-        doc.add_heading("Plano de Aula", level=1)
-        doc.add_paragraph(plano)
-
-        buffer = io.BytesIO()
-        doc.save(buffer)
-        buffer.seek(0)
-
-        st.download_button(
-            label="📥 Baixar em Word",
-            data=buffer,
-            file_name="plano_de_aula.docx",
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        )
-
-# =========================
-# ABA BIBLIOTECA
-# =========================
-
-with tab_biblioteca:
-
-    st.title("📚 Biblioteca Digital")
-
-    classe_bib = st.selectbox("Selecionar Classe", CLASSES)
-
-    pasta = os.path.join(BASE_DIR, classe_bib)
-    arquivos = os.listdir(pasta)
-
-    if arquivos:
-        for arquivo in arquivos:
-            caminho = os.path.join(pasta, arquivo)
-            with open(caminho, "rb") as f:
-                st.download_button(
-                    label=f"📄 {arquivo}",
-                    data=f,
-                    file_name=arquivo
-                )
-    else:
-        st.info("Nenhum documento disponível para esta classe.")
-
-# =========================
-# ABA ADMIN (PROTEGIDA)
-# =========================
-
-if is_admin:
-    with tab_admin:
-
-        st.title("⚙ Gestão do Portal")
-
-        classe_destino = st.selectbox("Enviar Documento para Classe", CLASSES)
-        ficheiro = st.file_uploader("Carregar PDF", type="pdf")
-
-        if ficheiro and st.button("Salvar Documento"):
-            caminho = os.path.join(BASE_DIR, classe_destino, ficheiro.name)
-
-            if os.path.exists(caminho):
-                st.error("Já existe um documento com este nome.")
-            else:
-                with open(caminho, "wb") as f:
-                    f.write(ficheiro.getbuffer())
-
-                st.success("Documento guardado com sucesso.")
-
-
-
-#----------------NÃO MEXER---------NÃO MEXER--------NÃO MEXER---------NÃO MEXER----------NÃO MEXER
+                                                #BAIXO BAIXO
+                                                
+#----------------NÃO MEXER---------NÃO MEXER--------NÃO MEXER---------NÃO MEXER----------NÃO MEXER----- BAIXO BAIXOOOOO
 
 # --- BARRA LATERAL ---
 with st.sidebar:
@@ -1236,6 +1077,7 @@ if is_admin:
                     f.write(ficheiro.getbuffer())
 
                 st.success("Documento guardado com sucesso.")
+
 
 
 

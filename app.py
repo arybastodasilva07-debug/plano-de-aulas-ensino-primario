@@ -5,9 +5,6 @@ from openai import OpenAI
 from docx import Document
 from docx.shared import Inches
 import io
-import os
-import streamlit as st
-import os
 import smtplib
 from email.mime.text import MIMEText
 import random
@@ -898,6 +895,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

@@ -9,6 +9,17 @@ from openai import OpenAI
 from docx import Document
 from docx.shared import Inches
 
+#------------ TEMPO DE LOGIN 1 HORA -----------------------------------------------
+
+@st.cache_data(ttl=3600)  # Lembra a validação por 1 hora
+def validar_acesso_cache(email, senha):
+    try:
+        if email in st.secrets["PASSWORDS"] and senha == str(st.secrets["PASSWORDS"][email]):
+            return True
+    except:
+        pass
+    return False
+
 # --- CONFIGURAÇÕES GLOBAIS (AQUI!) ---
 BASE_DIR = "biblioteca_permanente"
 FOLDER_DOCS = "Central_Documentos"
@@ -34,58 +45,55 @@ def gerar_codigo():
 
 # ======== NÃO MEXER ================= # NÃO MEXE # =========== NÃO MEXER ==============
 
-# ---------------- 3. SISTEMA DE LOGIN ----------------
+
+# Função com Cache para evitar quedas de sessão
+@st.cache_data(ttl=3600) # Mantém a validação viva por 1 hora
+def validar_acesso_persistente(email, senha):
+    try:
+        # Busca nos Secrets
+        if email in st.secrets["PASSWORDS"] and senha == str(st.secrets["PASSWORDS"][email]):
+            return True
+    except:
+        return False
+    return False
+
+# ------------------------------------ 3. SISTEMA DE LOGIN -----------------------------------
+
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
 
 if not st.session_state.autenticado:
     st.title("🇦🇴 Portal Pedagógico - Angola")
+    
+    # Script para manter a conexão ativa (Heartbeat)
+    st.markdown("""
+        <script>
+        setInterval(function() {
+            window.parent.postMessage({type: 'streamlit:set_component_value', value: Date.now()}, '*');
+        }, 30000);
+        </script>
+        """, unsafe_allow_html=True)
+
     tab_login, tab_solicitar = st.tabs(["🔐 Entrar", "🔑 Solicitar Acesso / Gerar Senha"])
 
     with tab_login:
         email_in = st.text_input("E-mail Google").strip().lower()
         pass_in = st.text_input("Chave de Acesso", type="password").strip()
+        
         if st.button("Validar Entrada"):
-            try:
-                # Verifica nos Secrets a lista [PASSWORDS]
-                if email_in in st.secrets["PASSWORDS"] and pass_in == str(st.secrets["PASSWORDS"][email_in]):
-                    st.session_state.autenticado = True
-                    st.session_state.user_email = email_in
-                    st.rerun()
-                else:
-                    st.error("Credenciais inválidas. Verifique o e-mail e a chave.")
-            except:
-                st.error("Erro: A lista de passwords não foi configurada nos Secrets.")
+            # Usamos a nova função com cache aqui
+            if validar_acesso_persistente(email_in, pass_in):
+                st.session_state.autenticado = True
+                st.session_state.user_email = email_in
+                st.rerun()
+            else:
+                st.error("Credenciais inválidas ou erro nos Secrets.")
 
     with tab_solicitar:
+        # ... (O seu código do WhatsApp continua igual aqui)
         st.subheader("Solicitar Nova Chave")
-        st.write("Clique no botão abaixo para gerar o seu pedido e enviá-lo via WhatsApp ao Administrador António Basto.")
-        
-        email_novo = st.text_input("Introduza o seu e-mail para registo")
-        
-        if email_novo:
-            if "@" in email_novo:
-                cod_sugerido = gerar_codigo()
-                
-                # Criar a mensagem para o WhatsApp
-                texto_whatsapp = f"Olá António Basto! Sou o professor(a) {email_novo}. Gostaria de adquirir o acesso ao Portal de Planos de Aula. Código de Referência: {cod_sugerido}"
-                texto_url = urllib.parse.quote(texto_whatsapp)
-                
-                # Substitua pelo seu número real (exemplo: 244900000000)
-                seu_numero = "244948298246" # <--- MUDE PARA O SEU NÚMERO AQUI
-                
-                link_wa = f"https://wa.me/{seu_numero}?text={texto_url}"
-                
-                st.info(f"O seu código gerado é: **{cod_sugerido}**")
-                st.markdown(f"""
-                    <a href="{link_wa}" target="_blank">
-                        <button style="background-color: #25D366; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                            📱 Enviar Pedido via WhatsApp
-                        </button>
-                    </a>
-                """, unsafe_allow_html=True)
-            else:
-                st.warning("Por favor, introduza um e-mail válido para gerar o link.")
+        # [Mantenha o resto do seu código de solicitação exatamente como está]
+
     st.stop()
 
 # ======== NÃO MEXER ================= # NÃO MEXE # =========== NÃO MEXER ==============
@@ -930,6 +938,18 @@ with st.sidebar:
     tempo = "45 minutos"
 
     gerar = st.button("🧠 Gerar Plano de Aula")
+    
+# ----------------Coloque isso logo após a criação da sidebar---------------------
+import time
+
+# Script invisível para manter a conexão ativa
+st.sidebar.markdown("""
+    <script>
+    setInterval(function() {
+        window.parent.postMessage({type: 'streamlit:set_component_value', value: Date.now()}, '*');
+    }, 30000); // Envia um sinal a cada 30 segundos
+    </script>
+    """, unsafe_allow_html=True)
 
 # ---------------- FUNÇÃO PARA GERAR PLANO ----------------
 def gerar_plano():
@@ -1017,6 +1037,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

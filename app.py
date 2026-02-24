@@ -260,7 +260,7 @@ with abas[1]:
 
 # --- ABA 3: LIVROS POR CLASSE (Visualização para todos) ---
 with abas[2]:
-    st.header("📚 Biblioteca Digital (Manuais-INIDE")
+    st.header("📚 Biblioteca Digital (Manuais-INIDE)")
     for classe in CLASSES[:-1]: # Itera pelas classes
         with st.expander(f"📁 {classe}"):
             arquivos = os.listdir(os.path.join(BASE_DIR, classe))
@@ -1071,6 +1071,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

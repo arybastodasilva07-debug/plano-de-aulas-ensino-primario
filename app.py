@@ -11,90 +11,6 @@ from docx.shared import Inches
 import sqlite3
 import bcrypt
 from datetime import datetime
-
-
-# ---------------------------
-# Conexão com o banco SQLite
-# ---------------------------
-conn = sqlite3.connect("usuarios.db", check_same_thread=False)
-cursor = conn.cursor()
-
-# Criar tabela se não existir
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS usuarios (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE,
-    senha_hash TEXT,
-    nome TEXT,
-    escola TEXT,
-    criado_em TEXT
-)
-""")
-conn.commit()
-
-# ---------------------------
-# Funções
-# ---------------------------
-def registrar_usuario(email, senha, nome, escola):
-    # Verifica se o email já existe
-    cursor.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
-    if cursor.fetchone():
-        st.error("Este email já está registrado.")
-        return False
-
-    # Criptografar a senha
-    senha_hash = bcrypt.hashpw(senha.encode('utf-8'), bcrypt.gensalt())
-
-    # Inserir no banco
-    cursor.execute("""
-        INSERT INTO usuarios (email, senha_hash, nome, escola, criado_em)
-        VALUES (?, ?, ?, ?, ?)
-    """, (email, senha_hash, nome, escola, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-    conn.commit()
-    st.success("Usuário cadastrado com sucesso!")
-    return True
-
-def login_usuario(email, senha):
-    cursor.execute("SELECT senha_hash, nome FROM usuarios WHERE email = ?", (email,))
-    resultado = cursor.fetchone()
-    if resultado:
-        senha_hash, nome = resultado
-        if bcrypt.checkpw(senha.encode('utf-8'), senha_hash):
-            st.success(f"Login realizado com sucesso! Bem-vindo, {nome}.")
-            return True
-    st.error("Email ou senha incorretos.")
-    return False
-
-# ---------------------------
-# Interface Streamlit
-# ---------------------------
-st.title("Sistema de Planeamento Pedagógico")
-
-menu = st.sidebar.selectbox("Menu", ["Cadastrar", "Login"])
-
-if menu == "Cadastrar":
-    st.subheader("Cadastro de Usuário")
-    email = st.text_input("Email")
-    senha = st.text_input("Senha", type="password")
-    nome = st.text_input("Seu Nome")
-    escola = st.text_input("Nome da Escola")
-
-    if st.button("Cadastrar"):
-        if email and senha and nome and escola:
-            registrar_usuario(email, senha, nome, escola)
-        else:
-            st.warning("Preencha todos os campos!")
-
-elif menu == "Login":
-    st.subheader("Login de Usuário")
-    email = st.text_input("Email", key="login_email")
-    senha = st.text_input("Senha", type="password", key="login_senha")
-
-    if st.button("Entrar"):
-        if email and senha:
-            login_usuario(email, senha)
-        else:
-            st.warning("Preencha todos os campos!")
             
 #------------ TEMPO DE LOGIN 1 HORA -----------------------------------------------
 
@@ -1228,6 +1144,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

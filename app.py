@@ -258,23 +258,51 @@ with abas[1]:
                             os.remove(os.path.join(caminho_cat, f))
                             st.rerun()
 
-# --- ABA 3: LIVROS POR CLASSE (Visualização para todos) ---
+# ---------------- ABA 3: LIVROS POR CLASSE (Com Download) --------------------------
+
 with abas[2]:
-    st.header("📚 Biblioteca Digital (Manuais-INIDE)")
-    for classe in CLASSES[:-1]: # Itera pelas classes
-        with st.expander(f"📁 {classe}"):
-            arquivos = os.listdir(os.path.join(BASE_DIR, classe))
+    st.header("📚 Livros por Classe")
+    st.info("Consulte os manuais escolares ou baixe-os para o seu dispositivo.")
+    
+    # CLASSES_NOMES é a lista: ["Iniciação", "1ª Classe", ..., "6ª Classe"]
+    for classe in CLASSES_NOMES:
+        with st.expander(f"📁 {classe.upper()}"):
+            caminho_classe = os.path.join(BASE_DIR, classe)
+            
+            # Garante que a pasta existe
+            if not os.path.exists(caminho_classe):
+                os.makedirs(caminho_classe)
+                
+            arquivos = os.listdir(caminho_classe)
+            
+            if not arquivos:
+                st.caption("Nenhum manual disponível para esta classe.")
+            
             for arq in arquivos:
-                c1, c2 = st.columns([4, 1])
+                # Criamos colunas: Nome do Livro | Botão Baixar | Botão Apagar (Admin)
+                col_txt, col_down, col_del = st.columns([3, 1, 0.5])
                 
-                if c1.button(f"📖 {arq}", key=f"btn_livro_{classe}_{arq}"):
-                    with open(os.path.join(BASE_DIR, classe, arq), "rb") as f:
-                        st.session_state.pdf_ativo = f.read()
+                caminho_livro = os.path.join(caminho_classe, arq)
                 
-                # BLOQUEIO: Só o gerente pode remover manuais
+                # Preparamos os dados para o download
+                with open(caminho_livro, "rb") as f:
+                    dados_livro = f.read()
+                
+                col_txt.write(f"📖 {arq}")
+                
+                # Botão de Download (Disponível para todos)
+                col_down.download_button(
+                    label="📥 Baixar",
+                    data=dados_livro,
+                    file_name=arq,
+                    key=f"down_livro_{classe}_{arq}"
+                )
+                
+                # Botão de Apagar (Apenas Gerente)
                 if is_gerente:
-                    if c2.button("🗑️", key=f"del_livro_{classe}_{arq}"):
-                        os.remove(os.path.join(BASE_DIR, classe, arq))
+                    if col_del.button("🗑️", key=f"del_livro_{classe}_{arq}"):
+                        os.remove(caminho_livro)
+                        st.success(f"Removido: {arq}")
                         st.rerun()
 
 # --- ABA 4: GERENCIAR ARQUIVOS (EXCLUSIVA DO GERENTE) ---
@@ -1071,6 +1099,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

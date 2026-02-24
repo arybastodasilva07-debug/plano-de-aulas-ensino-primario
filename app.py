@@ -187,6 +187,17 @@ with st.sidebar:
 # Verifica se o e-mail logado é o do administrador definido nos Secrets
 is_gerente = (st.session_state.user_email == st.secrets["ADMIN_EMAIL"].strip())
 
+#------------------DEFINIÇÃO DE LEITUA DOS MANUAI------------------------------
+
+import base64
+
+def exibir_pdf(caminho_arquivo):
+    with open(caminho_arquivo, "rb") as f:
+        base64_pdf = base64.b64encode(f.read()).decode('utf-8')
+    # Cria um iframe para exibir o PDF
+    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="800" type="application/pdf"></iframe>'
+    st.markdown(pdf_display, unsafe_allow_html=True)
+
 # --- 5. ESTRUTURA DINÂMICA DE ABAS ---
 
 # Definimos as abas básicas que todos veem
@@ -209,16 +220,23 @@ with abas[0]:
     st.info("Configure os detalhes na barra lateral a esquerda para gerar novo plano clicando na seta »")
    
 
-# --- ABA 2: CENTRAL DE DOCUMENTOS ---
+# ------------- ABA 2: CENTRAL DE DOCUMENTOS (Com Ler e Baixar) ------------------------
+
 with abas[1]:
     st.header("📂 Central de Documentos Oficiais")
+    st.write("Selecione uma categoria para visualizar ou baixar os documentos.")
+
+    # Espaço reservado para o visualizador de PDF (aparece no topo quando clica em Ler)
+    container_leitura_docs = st.container()
+
     caminho_central = os.path.join(BASE_DIR, FOLDER_DOCS)
-    
+
     for categoria, subcategorias in ESTRUTURA_DOCS.items():
         with st.expander(f"📁 {categoria.upper()}"):
             caminho_cat = os.path.join(caminho_central, categoria)
             os.makedirs(caminho_cat, exist_ok=True)
             
+            # CASO A: Pastas com Subpastas (ex: Programas e Dosificações)
             if subcategorias:
                 for sub in subcategorias:
                     st.markdown(f"**📍 {sub}**")
@@ -227,82 +245,106 @@ with abas[1]:
                     arquivos = os.listdir(c_sub)
                     
                     if not arquivos:
-                        st.caption("Nenhum arquivo nesta subpasta.")
+                        st.caption("Nenhum arquivo disponível.")
                     
                     for f in arquivos:
-                        # ESTE É O CONTEÚDO QUE DEVE ESTAR DENTRO DO FOR
-                        col_arq, col_down, col_del = st.columns([3, 1, 0.5])
-                        with open(os.path.join(c_sub, f), "rb") as file_bytes:
-                            btn_data = file_bytes.read()
-                        col_arq.write(f"📄 {f}")
-                        col_down.download_button("📥 Baixar", btn_data, file_name=f, key=f"dwn_{categoria}_{sub}_{f}")
+                        caminho_f = os.path.join(c_sub, f)
+                        col_n, col_v, col_d, col_x = st.columns([2.5, 0.8, 0.8, 0.5])
+                        
+                        col_n.write(f"📄 {f}")
+                        
+                        # Botão LER
+                        if col_v.button("👁️", key=f"v_{categoria}_{sub}_{f}", help="Ler documento"):
+                            with container_leitura_docs:
+                                st.subheader(f"Visualizando: {f}")
+                                if st.button("❌ Fechar Visualização", key=f"close_{f}"):
+                                    st.rerun()
+                                exibir_pdf(caminho_f)
+                                st.divider()
+
+                        # Botão BAIXAR
+                        with open(caminho_f, "rb") as db:
+                            col_d.download_button("📥", db.read(), file_name=f, key=f"d_{categoria}_{sub}_{f}")
+                        
+                        # Botão APAGAR (Admin)
                         if is_gerente:
-                            if col_del.button("🗑️", key=f"del_{categoria}_{sub}_{f}"):
-                                os.remove(os.path.join(c_sub, f))
+                            if col_x.button("🗑️", key=f"del_{categoria}_{sub}_{f}"):
+                                os.remove(caminho_f)
                                 st.rerun()
+                    st.divider()
             
-            else: # Este é o ELSE da linha 192 que deu erro
+            # CASO B: Pastas Simples (Calendário, Decretos, etc.)
+            else:
                 arquivos = os.listdir(caminho_cat)
                 if not arquivos:
-                    st.caption("Nenhum arquivo disponível aqui.")
+                    st.caption("Nenhum arquivo disponível.")
                 
                 for f in arquivos:
-                    # CONTEÚDO DO FOR PARA PASTAS SIMPLES
-                    col_arq, col_down, col_del = st.columns([3, 1, 0.5])
-                    with open(os.path.join(caminho_cat, f), "rb") as file_bytes:
-                        btn_data = file_bytes.read()
-                    col_arq.write(f"📄 {f}")
-                    col_down.download_button("📥 Baixar", btn_data, file_name=f, key=f"dwn_{categoria}_{f}")
+                    caminho_f = os.path.join(caminho_cat, f)
+                    col_n, col_v, col_d, col_x = st.columns([2.5, 0.8, 0.8, 0.5])
+                    
+                    col_n.write(f"📄 {f}")
+                    
+                    # Botão LER
+                    if col_v.button("👁️", key=f"v_{categoria}_{f}", help="Ler documento"):
+                        with container_leitura_docs:
+                            st.subheader(f"Visualizando: {f}")
+                            if st.button("❌ Fechar Visualização", key=f"close_s_{f}"):
+                                st.rerun()
+                            exibir_pdf(caminho_f)
+                            st.divider()
+
+                    # Botão BAIXAR
+                    with open(caminho_f, "rb") as db:
+                        col_d.download_button("📥", db.read(), file_name=f, key=f"d_{categoria}_{f}")
+                    
+                    # Botão APAGAR (Admin)
                     if is_gerente:
-                        if col_del.button("🗑️", key=f"del_{categoria}_{f}"):
-                            os.remove(os.path.join(caminho_cat, f))
+                        if col_x.button("🗑️", key=f"del_{categoria}_{f}"):
+                            os.remove(caminho_f)
                             st.rerun()
 
-# ---------------- ABA 3: LIVROS POR CLASSE (Com Download) --------------------------
-
+# --- ABA 3: LIVROS POR CLASSE (Com Ler e Baixar) ---
 with abas[2]:
     st.header("📚 Livros por Classe")
-    st.info("Consulte os manuais escolares ou baixe-os para o seu dispositivo.")
     
-    # CLASSES_NOMES é a lista: ["Iniciação", "1ª Classe", ..., "6ª Classe"]
+    # Criamos um espaço vazio no topo para exibir o livro quando "Ler" for clicado
+    container_leitura = st.container()
+
     for classe in CLASSES_NOMES:
         with st.expander(f"📁 {classe.upper()}"):
             caminho_classe = os.path.join(BASE_DIR, classe)
-            
-            # Garante que a pasta existe
-            if not os.path.exists(caminho_classe):
-                os.makedirs(caminho_classe)
-                
+            os.makedirs(caminho_classe, exist_ok=True)
             arquivos = os.listdir(caminho_classe)
             
             if not arquivos:
-                st.caption("Nenhum manual disponível para esta classe.")
+                st.caption("Nenhum manual disponível.")
             
             for arq in arquivos:
-                # Criamos colunas: Nome do Livro | Botão Baixar | Botão Apagar (Admin)
-                col_txt, col_down, col_del = st.columns([3, 1, 0.5])
-                
                 caminho_livro = os.path.join(caminho_classe, arq)
                 
-                # Preparamos os dados para o download
-                with open(caminho_livro, "rb") as f:
-                    dados_livro = f.read()
+                # Colunas: Nome | Ler | Baixar | Apagar
+                col_txt, col_ver, col_down, col_del = st.columns([2.5, 0.8, 0.8, 0.5])
                 
                 col_txt.write(f"📖 {arq}")
                 
-                # Botão de Download (Disponível para todos)
-                col_down.download_button(
-                    label="📥 Baixar",
-                    data=dados_livro,
-                    file_name=arq,
-                    key=f"down_livro_{classe}_{arq}"
-                )
+                # Botão LER
+                if col_ver.button("👁️ Ler", key=f"ver_{classe}_{arq}"):
+                    with container_leitura:
+                        st.subheader(f"Visualizando: {arq}")
+                        if st.button("❌ Fechar Leitura"):
+                            st.rerun()
+                        exibir_pdf(caminho_livro)
+                        st.divider()
+
+                # Botão BAIXAR
+                with open(caminho_livro, "rb") as f:
+                    col_down.download_button("📥", f.read(), file_name=arq, key=f"d_{classe}_{arq}")
                 
-                # Botão de Apagar (Apenas Gerente)
+                # Botão APAGAR (Admin)
                 if is_gerente:
-                    if col_del.button("🗑️", key=f"del_livro_{classe}_{arq}"):
+                    if col_del.button("🗑️", key=f"del_{classe}_{arq}"):
                         os.remove(caminho_livro)
-                        st.success(f"Removido: {arq}")
                         st.rerun()
 
 # --- ABA 4: GERENCIAR ARQUIVOS (EXCLUSIVA DO GERENTE) ---
@@ -1099,6 +1141,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

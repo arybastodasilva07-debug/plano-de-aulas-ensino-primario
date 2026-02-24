@@ -97,9 +97,9 @@ if not st.session_state.autenticado:
 
     with tab_solicitar:
         st.subheader("Solicitar Nova Chave")
-        st.write("Clique no botão abaixo para enviar o seu pedido ao Administrador António Basto.")
+        st.write("Introduza o seu e-mail para gerar o código de acesso no campo abaixo.")
         
-        email_novo = st.text_input("Introduza o seu e-mail para registo", key="reg_email")
+        email_novo = st.text_input("Clique no botão abaixo para enviar o seu pedido ao Administrador António Basto", key="reg_email")
         
         if email_novo:
             if "@" in email_novo:
@@ -1069,6 +1069,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

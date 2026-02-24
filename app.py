@@ -46,18 +46,23 @@ def gerar_codigo():
 # ======== NÃO MEXER ================= # NÃO MEXE # =========== NÃO MEXER ==============
 
 
-# Função com Cache para evitar quedas de sessão
-@st.cache_data(ttl=3600) # Mantém a validação viva por 1 hora
+# ----------------------------------------------------------------
+# 3. FUNÇÕES DE PERSISTÊNCIA E SEGURANÇA (Coloque antes do Login)
+# ----------------------------------------------------------------
+
+@st.cache_data(ttl=3600)  # Lembra a validação por 1 hora para evitar quedas
 def validar_acesso_persistente(email, senha):
     try:
-        # Busca nos Secrets
+        # Verifica nos Secrets a lista [PASSWORDS]
         if email in st.secrets["PASSWORDS"] and senha == str(st.secrets["PASSWORDS"][email]):
             return True
-    except:
+    except Exception:
         return False
     return False
 
-# ------------------------------------ 3. SISTEMA DE LOGIN -----------------------------------
+# ----------------------------------------------------------------
+# 4. SISTEMA DE LOGIN INTEGRADO
+# ----------------------------------------------------------------
 
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
@@ -65,46 +70,61 @@ if "autenticado" not in st.session_state:
 if not st.session_state.autenticado:
     st.title("🇦🇴 Portal Pedagógico - Angola")
     
-    # Script para manter a conexão ativa (Heartbeat)
+    # Script invisível para manter a conexão ativa com o servidor
     st.markdown("""
         <script>
         setInterval(function() {
             window.parent.postMessage({type: 'streamlit:set_component_value', value: Date.now()}, '*');
-        }, 30000);
+        }, 30000); 
         </script>
         """, unsafe_allow_html=True)
 
     tab_login, tab_solicitar = st.tabs(["🔐 Entrar", "🔑 Solicitar Acesso / Gerar Senha"])
 
+    with tab_login:
+        st.subheader("Acesso ao Portal")
+        email_in = st.text_input("E-mail Google", placeholder="exemplo@gmail.com").strip().lower()
+        pass_in = st.text_input("Chave de Acesso", type="password", placeholder="Insira sua chave")
+        
+        if st.button("Validar Entrada", use_container_width=True):
+            if validar_acesso_persistente(email_in, pass_in):
+                st.session_state.autenticado = True
+                st.session_state.user_email = email_in
+                st.success("Acesso autorizado! Carregando portal...")
+                st.rerun()
+            else:
+                st.error("Credenciais inválidas. Verifique o e-mail e a chave.")
+
     with tab_solicitar:
         st.subheader("Solicitar Nova Chave")
-        st.write("Clique no botão abaixo para gerar o seu pedido e enviá-lo via WhatsApp ao Administrador António Basto.")
+        st.write("Clique no botão abaixo para enviar o seu pedido ao Administrador António Basto.")
         
-        email_novo = st.text_input("Introduza o seu e-mail para registo")
+        email_novo = st.text_input("Introduza o seu e-mail para registo", key="reg_email")
         
         if email_novo:
             if "@" in email_novo:
+                # Função gerar_codigo() deve estar definida no topo do seu script
                 cod_sugerido = gerar_codigo()
                 
-                # Criar a mensagem para o WhatsApp
-                texto_whatsapp = f"Olá António Basto! Sou o professor(a) {email_novo}. Gostaria de adquirir o acesso ao Portal de Planos de Aula. Código de Referência: {cod_sugerido}"
+                # Configuração do WhatsApp
+                texto_whatsapp = f"Olá Prof. António Basto! Sou o professor(a) {email_novo}. Gostaria de adquirir o acesso ao Portal de Planos de Aula. Código de Referência: {cod_sugerido}"
                 texto_url = urllib.parse.quote(texto_whatsapp)
-                
-                # Substitua pelo seu número real (exemplo: 244900000000)
-                seu_numero = "244948298246" # <--- MUDE PARA O SEU NÚMERO AQUI
-                
+                seu_numero = "244954458413" 
                 link_wa = f"https://wa.me/{seu_numero}?text={texto_url}"
                 
                 st.info(f"O seu código gerado é: **{cod_sugerido}**")
+                
                 st.markdown(f"""
-                    <a href="{link_wa}" target="_blank">
-                        <button style="background-color: #25D366; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                    <a href="{link_wa}" target="_blank" style="text-decoration: none;">
+                        <div style="background-color: #25D366; color: white; text-align: center; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 16px;">
                             📱 Enviar Pedido via WhatsApp
-                        </button>
+                        </div>
                     </a>
                 """, unsafe_allow_html=True)
             else:
-                st.warning("Por favor, introduza um e-mail válido para gerar o link.")
+                st.warning("Por favor, introduza um e-mail válido.")
+
+    # Interrompe a execução aqui para quem não está logado
     st.stop()
 
 
@@ -1049,6 +1069,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

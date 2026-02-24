@@ -1,4 +1,63 @@
+import streamlit as st
+import os
+import io
+import random
+import string
+import urllib.parse
+from streamlit_pdf_viewer import pdf_viewer
+from openai import OpenAI
+from docx import Document
+from docx.shared import Inches
 
+#------------ TEMPO DE LOGIN 1 HORA -----------------------------------------------
+
+@st.cache_data(ttl=3600)  # Lembra a validação por 1 hora
+def validar_acesso_cache(email, senha):
+    try:
+        if email in st.secrets["PASSWORDS"] and senha == str(st.secrets["PASSWORDS"][email]):
+            return True
+    except:
+        pass
+    return False
+
+# --- CONFIGURAÇÕES GLOBAIS (AQUI!) ---
+BASE_DIR = "biblioteca_permanente"
+FOLDER_DOCS = "Central_Documentos"
+
+# ---------------- CONFIGURAÇÃO ----------------
+st.set_page_config(page_title="Plano de Aula - INIDE Angola", layout="wide")
+st.title("🇦🇴 SISTEMA PROFISSIONAL DE ELABORAÇÃO DE PLANO DE AULA")
+st.subheader("Ensino Primário (Iniciação à 6ª Classe)")
+
+# Estilo para esconder menus nativos e limpar a interface
+st.markdown("""
+    <style>
+    .stAppDeployButton {display:none;}
+    footer {visibility: hidden;}
+    [data-testid="stHeader"] {background: rgba(0,0,0,0);}
+    </style>
+    """, unsafe_allow_html=True)
+
+# ---------------- 2. FUNÇÕES DE APOIO ----------------
+def gerar_codigo():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    
+
+# ======== NÃO MEXER ================= # NÃO MEXE # =========== NÃO MEXER ==============
+
+
+# ----------------------------------------------------------------
+# 3. FUNÇÕES DE PERSISTÊNCIA E SEGURANÇA (Coloque antes do Login)
+# ----------------------------------------------------------------
+
+@st.cache_data(ttl=3600)  # Lembra a validação por 1 hora para evitar quedas
+def validar_acesso_persistente(email, senha):
+    try:
+        # Verifica nos Secrets a lista [PASSWORDS]
+        if email in st.secrets["PASSWORDS"] and senha == str(st.secrets["PASSWORDS"][email]):
+            return True
+    except Exception:
+        return False
     return False
 
 # ----------------------------------------------------------------
@@ -1082,6 +1141,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

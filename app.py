@@ -86,7 +86,7 @@ if not st.session_state.autenticado:
         email_in = st.text_input("E-mail Google", placeholder="exemplo@gmail.com").strip().lower()
         pass_in = st.text_input("Chave de Acesso", type="password", placeholder="Insira sua chave")
         
-        if st.button("Validar Entrada", use_container_width=True):
+        if st.button("Entrar no Portal"):
             if validar_acesso_persistente(email_in, pass_in):
                 st.session_state.autenticado = True
                 st.session_state.user_email = email_in
@@ -1069,6 +1069,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

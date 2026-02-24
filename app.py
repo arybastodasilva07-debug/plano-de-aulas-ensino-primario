@@ -8,7 +8,86 @@ from streamlit_pdf_viewer import pdf_viewer
 from openai import OpenAI
 from docx import Document
 from docx.shared import Inches
+import sqlite3
+import bcrypt
+from datetime import datetime
 
+# Conectar à base de dados
+conn = sqlite3.connect("plataforma.db", check_same_thread=False)
+cursor = conn.cursor()
+
+# Criar tabela de usuários
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS usuarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE,
+    senha_hash BLOB,
+    nome TEXT,
+    escola TEXT,
+    criado_em TEXT
+)
+""")
+
+conn.commit()
+
+#------------ FUNÇÃO DE REGISTO --------
+def registrar_usuario(email, senha, nome, escola):
+
+    senha_hash = bcrypt.hashpw(senha.encode(), bcrypt.gensalt())
+
+    cursor.execute("""
+    INSERT INTO usuarios (email, senha_hash, nome, escola, criado_em)
+    VALUES (?, ?, ?, ?, ?)
+    """, (
+        email,
+        senha_hash,
+        nome,
+        escola,
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ))
+
+    conn.commit()
+
+#--------------- FUNÇÃO DE LOGIN SEGURO --------------------
+def verificar_login(email, senha):
+
+    cursor.execute("SELECT senha_hash FROM usuarios WHERE email = ?", (email,))
+    resultado = cursor.fetchone()
+
+    if resultado:
+        senha_guardada = resultado[0]
+        if bcrypt.checkpw(senha.encode(), senha_guardada):
+            return True
+
+    return False
+    
+#------------ INTERFACE SIMPLES DE LOGIN -------------------
+import streamlit as st
+
+st.title("Sistema de Planeamento Pedagógico")
+
+menu = st.sidebar.selectbox("Menu", ["Login", "Registrar"])
+
+if menu == "Registrar":
+    email = st.text_input("Email")
+    senha = st.text_input("Senha", type="password")
+    nome = st.text_input("Seu Nome")
+    escola = st.text_input("Nome da Escola")
+
+    if st.button("Criar Conta"):
+        registrar_usuario(email, senha, nome, escola)
+        st.success("Conta criada com sucesso!")
+
+elif menu == "Login":
+    email = st.text_input("Email")
+    senha = st.text_input("Senha", type="password")
+
+    if st.button("Entrar"):
+        if verificar_login(email, senha):
+            st.success("Login realizado com sucesso!")
+        else:
+            st.error("Email ou senha incorretos.")
+            
 #------------ TEMPO DE LOGIN 1 HORA -----------------------------------------------
 
 @st.cache_data(ttl=3600)  # Lembra a validação por 1 hora
@@ -1141,6 +1220,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

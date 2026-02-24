@@ -76,25 +76,37 @@ if not st.session_state.autenticado:
 
     tab_login, tab_solicitar = st.tabs(["🔐 Entrar", "🔑 Solicitar Acesso / Gerar Senha"])
 
-    with tab_login:
-        email_in = st.text_input("E-mail Google").strip().lower()
-        pass_in = st.text_input("Chave de Acesso", type="password").strip()
-        
-        if st.button("Validar Entrada"):
-            # Usamos a nova função com cache aqui
-            if validar_acesso_persistente(email_in, pass_in):
-                st.session_state.autenticado = True
-                st.session_state.user_email = email_in
-                st.rerun()
-            else:
-                st.error("Credenciais inválidas ou erro nos Secrets.")
-
     with tab_solicitar:
-        # ... (O seu código do WhatsApp continua igual aqui)
         st.subheader("Solicitar Nova Chave")
-        # [Mantenha o resto do seu código de solicitação exatamente como está]
-
+        st.write("Clique no botão abaixo para gerar o seu pedido e enviá-lo via WhatsApp ao Administrador António Basto.")
+        
+        email_novo = st.text_input("Introduza o seu e-mail para registo")
+        
+        if email_novo:
+            if "@" in email_novo:
+                cod_sugerido = gerar_codigo()
+                
+                # Criar a mensagem para o WhatsApp
+                texto_whatsapp = f"Olá António Basto! Sou o professor(a) {email_novo}. Gostaria de adquirir o acesso ao Portal de Planos de Aula. Código de Referência: {cod_sugerido}"
+                texto_url = urllib.parse.quote(texto_whatsapp)
+                
+                # Substitua pelo seu número real (exemplo: 244900000000)
+                seu_numero = "244948298246" # <--- MUDE PARA O SEU NÚMERO AQUI
+                
+                link_wa = f"https://wa.me/{seu_numero}?text={texto_url}"
+                
+                st.info(f"O seu código gerado é: **{cod_sugerido}**")
+                st.markdown(f"""
+                    <a href="{link_wa}" target="_blank">
+                        <button style="background-color: #25D366; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                            📱 Enviar Pedido via WhatsApp
+                        </button>
+                    </a>
+                """, unsafe_allow_html=True)
+            else:
+                st.warning("Por favor, introduza um e-mail válido para gerar o link.")
     st.stop()
+
 
 # ======== NÃO MEXER ================= # NÃO MEXE # =========== NÃO MEXER ==============
 
@@ -1037,6 +1049,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 

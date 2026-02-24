@@ -206,7 +206,7 @@ abas = st.tabs(titulos_abas)
 # --- ABA 1: GERADOR DE PLANOS (Acesso Total) ---
 with abas[0]:
     st.header("📝 Criar Novo Plano de Aula")
-    st.info("Configure os detalhes na barra lateral a esquerda para gerar novo plano clicando na seta "»"")
+    st.info("Configure os detalhes na barra lateral a esquerda para gerar novo plano clicando na seta »")
    
 
 # --- ABA 2: CENTRAL DE DOCUMENTOS ---
@@ -1071,6 +1071,7 @@ if gerar:
         # Download Word
         word_file = gerar_word(plano)
         st.download_button("📄 Baixar em Word (.docx)", word_file, "plano_de_aula.docx")
+
 
 
 
